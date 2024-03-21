@@ -1,0 +1,15 @@
+pip:
+  image: python:3.9-bullseye
+  script:
+    - pip3 install .
+    - cli2 -h
+    - pip3 uninstall cli2 -y
+
+conda:
+  image: continuumio/miniconda:latest
+  script:
+    - conda env create -f environment.yml
+    - conda init --all
+    - source ~/.bashrc
+    - conda activate cli2_env
+    - cli2 -h
