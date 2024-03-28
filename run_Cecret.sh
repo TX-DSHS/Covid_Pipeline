@@ -6,19 +6,13 @@
 # Date updated: 2024-03-28
 # Author: jie.lu@dshs.texas.gov
 
-#add nextflow and miniconda to PATH
-#export PATH="$PATH:/work/software/"
-#source /work/software/miniconda3/etc/profile.d/conda.sh
-#if [[ -z ${CONDA_PREFIX+x} ]]; then
-#    export PATH="$PATH:~/conda/bin"
-#fi
 # set the base directory
-install_dir="/home/dnalab"
+install_dir="/bioinformatics/Covid_Pipeline"
 #set the base directory
-basedir="/home/dnalab/cecret_runs/$1" #$1 corresponds to first argument in bash command <sequencing_run>
+basedir="${install_dir}/cecret_runs/$1" #$1 corresponds to first argument in bash command <sequencing_run>
 rm -rf $basedir
 mkdir -p $basedir
-rm $basedir/run_Cecret.log $basedir/run_Cecret.err
+
 echo "Starting running run_Cecret.sh at "`date` 1>$basedir/run_Cecret.log
 
 #Copy read files to working directory/reads
