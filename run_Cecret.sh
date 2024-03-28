@@ -7,7 +7,9 @@
 # Author: jie.lu@dshs.texas.gov
 
 # set the base directory
+aws_bucket="s3://804609861260-covid-19"
 install_dir="/bioinformatics/Covid_Pipeline"
+
 #set the base directory
 basedir="${install_dir}/cecret_runs/$1" #$1 corresponds to first argument in bash command <sequencing_run>
 rm -rf $basedir
@@ -18,7 +20,7 @@ echo "Starting running run_Cecret.sh at "`date` 1>$basedir/run_Cecret.log
 #Copy read files to working directory/reads
 mkdir -p ${basedir}/reads
 
-aws s3 cp s3://804609861260-covid-19/DATA/RAW_RUNS/$1.zip ${basedir}/reads 2>$basedir/run_Cecret.err
+aws s3 cp $aws_bucket/DATA/RAW_RUNS/$1.zip ${basedir}/reads 2>$basedir/run_Cecret.err
 unzip -j $basedir/reads/$1.zip -d $basedir/reads/ 2>>$basedir/run_Cecret.err
 rm $basedir/reads/$1.zip 2>$basedir/run_Cecret.err
 
@@ -60,9 +62,9 @@ mkdir -p $install_dir/cecret_runs/zipfiles
 zip -r $install_dir/cecret_runs/zipfiles/$1 $basedir/$0 $basedir/*.txt $basedir/cecret/aligned/ $basedir/cecret/bedtools_multicov $basedir/cecret/consensus/  $basedir/cecret/fastqc/ $basedir/cecret/ivar_trim/ $basedir/cecret/ivar_variants/ $basedir/cecret/logs/ $basedir/cecret/nextclade/  $basedir/cecret/pangolin/ $basedir/cecret/samtools_ampliconstats/ $basedir/cecret/samtools_coverage/ $basedir/cecret/samtools_depth/  $basedir/cecret/samtools_flagstat/ $basedir/cecret/samtools_plot_ampliconstats/ $basedir/cecret/samtools_stats/ $basedir/cecret/seqyclean/   $basedir/cecret/summary.csv $basedir/cecret/vadr  $basedir/summary_nextclade_report.tsv $basedir/summary_pangolin_report.tsv $basedir/cecret/kraken2/ $basedir/Cecret/
 
 #copy zip files and runresult file to S3 bucket
-aws s3 cp  $(echo ${install_dir}/cecret_runs/zipfiles/${1}.zip) s3://804609861260-covid-19/cecret_runs/zip_files/ 2>>$basedir/run_Cecret.err
+aws s3 cp  $(echo ${install_dir}/cecret_runs/zipfiles/${1}.zip) $aws_bucket/cecret_runs/zip_files/ 2>>$basedir/run_Cecret.err
 
-aws s3 cp $(echo $basedir/run_results_$1.txt) s3://804609861260-covid-19/cecret_runs/run_results/ 2>>$basedir/run_Cecret.err
+aws s3 cp $(echo $basedir/run_results_$1.txt) $aws_bucket/cecret_runs/run_results/ 2>>$basedir/run_Cecret.err
 
 echo "run_Cecret.sh completed at "`date` 1>>$basedir/run_Cecret.log
 #bash postCecretPipeline.sh $1
