@@ -9,10 +9,12 @@
 # bash run_Cecret_CL.sh <run_name>
 
 #set the base directory
-instal_dir="/home/dnalab"
-basedir="/home/dnalab/cecret_runs/$1" #$1 corresponds to first argument in bash command <sequencing_run>
+aws_bucket="s3://804609861260-covid-19"
+install_dir="/bioinformatics/Covid_Pipeline"
+
+basedir="${install_dir}/cecret_runs/$1" #$1 corresponds to first argument in bash command <sequencing_run>
 rm -rf $basedir
-mkdir $basedir
+mkdir -p $basedir
 
 echo "Starting running run_Cecret.sh at "`date` 1>$basedir/run_Cecret.log
 
@@ -21,7 +23,7 @@ mkdir -p ${basedir}/download
 mkdir -p ${basedir}/reads
 mkdir -p ${basedir}/fastq
 
-aws s3 cp s3://804609861260-covid-19/DATA/RAW_RUNS/$1.zip ${basedir}/download
+aws s3 cp $aws_bucket/DATA/RAW_RUNS/$1.zip ${basedir}/download
 unzip -j ${basedir}/download/$1.zip -d ${basedir}/download/
 tar -xvf ${basedir}/download/*.fastqs.tar -C ${basedir}/fastq
 tar -xvf ${basedir}/download/*.fastas.tar -C ${basedir}/reads
@@ -57,7 +59,7 @@ rm -r $basedir/cecret/work
 zip -r $install_dir/cecret_runs/zipfiles/$1 $basedir/cecret/
 
 echo "Transferring Cecret Pipeline output files to s3" 1>>$basedir/run_Cecret.log
-aws s3 cp  $(echo ${install_dir}/cecret_runs/zipfiles/${1}.zip) s3://804609861260-covid-19/cecret_runs/zip_files/
+aws s3 cp  $(echo ${install_dir}/cecret_runs/zipfiles/${1}.zip) $aws_bucket/cecret_runs/zip_files/
 rm $install_dir/cecret_runs/zipfiles/$1.zip
 
 echo "run_Cecret_CL.sh completed at "`date` 1>>$basedir/run_Cecret.log
