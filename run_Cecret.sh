@@ -8,10 +8,10 @@
 
 # set the base directory
 aws_bucket="s3://804609861260-covid-19"
-install_dir="/bioinformatics/Covid_Pipeline"
+install_dir=$PWD
 
 #set the base directory
-basedir="${install_dir}/cecret_runs/$1" #$1 corresponds to first argument in bash command <sequencing_run>
+basedir=$install_dir/cecret_runs/$1
 rm -rf $basedir
 mkdir -p $basedir
 
@@ -31,7 +31,6 @@ docker pull staphb/pangolin:latest 2>>$basedir/run_Cecret.err
 cd $basedir
 #print run_cecret script name to text file
 echo "The analysis of covid sequencing run" ${1} "was executed with " $0 > $basedir/cecret_script_used.txt
-#cp $HOME/$0 $basedir/
 
 #run cecret
 echo "running Cecret pipeline" 1>>$basedir/run_Cecret.log
@@ -58,15 +57,16 @@ fi
 
 echo "wrapping up results and transferring to s3" 1>>$basedir/run_Cecret.log
 #zip output files
-mkdir -p $install_dir/cecret_runs/zipfiles
-zip -r $install_dir/cecret_runs/zipfiles/$1 $basedir/$0 $basedir/*.txt $basedir/cecret/aligned/ $basedir/cecret/bedtools_multicov $basedir/cecret/consensus/  $basedir/cecret/fastqc/ $basedir/cecret/ivar_trim/ $basedir/cecret/ivar_variants/ $basedir/cecret/logs/ $basedir/cecret/nextclade/  $basedir/cecret/pangolin/ $basedir/cecret/samtools_ampliconstats/ $basedir/cecret/samtools_coverage/ $basedir/cecret/samtools_depth/  $basedir/cecret/samtools_flagstat/ $basedir/cecret/samtools_plot_ampliconstats/ $basedir/cecret/samtools_stats/ $basedir/cecret/seqyclean/   $basedir/cecret/summary.csv $basedir/cecret/vadr  $basedir/summary_nextclade_report.tsv $basedir/summary_pangolin_report.tsv $basedir/cecret/kraken2/ $basedir/Cecret/
+
+zip -r $basedir/$1 $basedir/*.txt $basedir/cecret/aligned/ $basedir/cecret/bedtools_multicov $basedir/cecret/consensus/  $basedir/cecret/fastqc/ $basedir/cecret/ivar_trim/ $basedir/cecret/ivar_variants/ $basedir/cecret/logs/ $basedir/cecret/nextclade/  $basedir/cecret/pangolin/ $basedir/cecret/samtools_ampliconstats/ $basedir/cecret/samtools_coverage/ $basedir/cecret/samtools_depth/  $basedir/cecret/samtools_flagstat/ $basedir/cecret/samtools_plot_ampliconstats/ $basedir/cecret/samtools_stats/ $basedir/cecret/seqyclean/   $basedir/cecret/summary.csv $basedir/cecret/vadr  $basedir/summary_nextclade_report.tsv $basedir/summary_pangolin_report.tsv $basedir/cecret/kraken2/ $basedir/Cecret/
 
 #copy zip files and runresult file to S3 bucket
-aws s3 cp  $(echo ${install_dir}/cecret_runs/zipfiles/${1}.zip) $aws_bucket/cecret_runs/zip_files/ 2>>$basedir/run_Cecret.err
+aws s3 cp $basedir/$1.zip $aws_bucket/cecret_runs/zip_files/ 2>>$basedir/run_Cecret.err
 
-aws s3 cp $(echo $basedir/run_results_$1.txt) $aws_bucket/cecret_runs/run_results/ 2>>$basedir/run_Cecret.err
+aws s3 cp $basedir/run_results_$1.txt $aws_bucket/cecret_runs/run_results/$1_cecret_results.csv 2>>$basedir/run_Cecret.err
 
 echo "run_Cecret.sh completed at "`date` 1>>$basedir/run_Cecret.log
+#chown -R dnalab:dnalab $basedir
 #bash postCecretPipeline.sh $1
 # submit to SRA and Gisaid
 

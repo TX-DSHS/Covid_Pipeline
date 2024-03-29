@@ -10,7 +10,7 @@
 
 #set the base directory
 aws_bucket="s3://804609861260-covid-19"
-install_dir="/bioinformatics/Covid_Pipeline"
+install_dir=$PWD
 
 basedir="${install_dir}/cecret_runs/$1" #$1 corresponds to first argument in bash command <sequencing_run>
 rm -rf $basedir
@@ -55,13 +55,14 @@ else
 fi
 
 echo "Zipping Cecret Pipeline output files" 1>>$basedir/run_Cecret.log
-rm -r $basedir/cecret/work
-zip -r $install_dir/cecret_runs/zipfiles/$1 $basedir/cecret/
+rm -r $basedir/work
+zip -r $basedir/$1 $basedir/cecret/
 
 echo "Transferring Cecret Pipeline output files to s3" 1>>$basedir/run_Cecret.log
-aws s3 cp  $(echo ${install_dir}/cecret_runs/zipfiles/${1}.zip) $aws_bucket/cecret_runs/zip_files/
-rm $install_dir/cecret_runs/zipfiles/$1.zip
-
+aws s3 cp $basedir/$1.zip $aws_bucket/cecret_runs/zip_files/
+aws s3 cp $basedir/cecret/cecret_results.csv $aws_bucket/cecret_runs/run_results/$1_cecret_results.csv 2>>$basedir/run_Cecret.err
+rm $basedir/$1.zip
+#chown -R dnalab:dnalab $basedir
 echo "run_Cecret_CL.sh completed at "`date` 1>>$basedir/run_Cecret.log
 # submit to SRA and Gisaid
 # bash submit_to_SRA.sh $1

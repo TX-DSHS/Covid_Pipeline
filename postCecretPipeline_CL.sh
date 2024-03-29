@@ -8,6 +8,8 @@ version="postCecretPipeline version 2.0 for Clear Labs"
 #format         SampleDemo.txt header (tab-delimited)
 # 1-TEXAS-DSHS####	2-Run name	3-DSHS ID	4-Complete/Failed	5-final_collection_date_text	6-final_sex	7-final_source	8-Final_County	9-Reason_for_Sequencing
 
+basedir=$PWD
+aws_bucket="s3://804609861260-covid-19"
 authors=$(head authors.txt)
 
 #==============================================================================
@@ -241,9 +243,9 @@ echo "Please see $1.runlist.txt for detailed results" 2>&1 | tee -a $run_dir/$1.
 # rm $result.demo.status.sra
 # cp $SampleDemo $PWD/old_demos/demos_$1.txt
 
-# if [ -e /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip ];
+# if [ -e $basedir/cecret_runs/zipfiles/postCecret_$1.zip ];
 # then
-# rm /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip
+# rm $basedir/cecret_runs/zipfiles/postCecret_$1.zip
 # fi
-# zip -rj /home/dnalab/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
-# aws s3 cp /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip
+# zip -rj $basedir/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
+# aws s3 cp $basedir/cecret_runs/zipfiles/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip
