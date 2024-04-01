@@ -21,6 +21,11 @@ echo "Starting running run_Cecret.sh at "`date` 1>$basedir/run_Cecret.log
 mkdir -p ${basedir}/reads
 
 aws s3 cp $aws_bucket/DATA/RAW_RUNS/$1.zip ${basedir}/reads 2>$basedir/run_Cecret.err
+# if the zip file is not found, exit the script
+if [ ! -f ${basedir}/reads/$1.zip ]; then
+    echo "The zip file $1.zip is not found in the S3 bucket" 1>>$basedir/run_Cecret.log
+    exit 1
+fi
 unzip -j $basedir/reads/$1.zip -d $basedir/reads/ 2>>$basedir/run_Cecret.err
 rm $basedir/reads/$1.zip 2>$basedir/run_Cecret.err
 
