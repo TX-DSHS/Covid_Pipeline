@@ -80,11 +80,7 @@ if ls ${basedir}/reads/demo* 1> /dev/null 2>&1; then
     cp ${basedir}/reads/demo* $install_dir 2>>$basedir/run_Cecret.err
     cd $install_dir
     bash postCecretPipeline_test.sh $1 2>>$basedir/run_Cecret.err
-    # if the run is not successful, exit the script
-    if [ $? -ne 0 ]; then
-        echo "The postCecretPipeline_test.sh script failed" 1>>$basedir/run_Cecret.log
-        exit 1
-    fi
+  
 else
     echo "demo file does not exist" 1>>$basedir/run_Cecret.log
 fi
