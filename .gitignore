@@ -1,1 +1,4 @@
 cecret_runs/
+.nextflow.log*
+.nextflow/
+work/
