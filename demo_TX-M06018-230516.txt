@@ -1,8 +1,0 @@
-TX-DSHS-####	Run name	DSHS ID	Complete/Failed	final_collection_date_text	final_sex	final_source	final_county	Reason_for_Sequencing
-TX-DSHS-25770	TX-M06018-230516	ASC2300718		2023-04-13	Male	Anterior nasal swab	Houston	Other (use comments)
-TX-DSHS-25771	TX-M06018-230516	ASC2300725		2023-04-18	Male	Nasopharyngeal swab	Hidalgo	Surveillance
-TX-DSHS-25772	TX-M06018-230516	ASC2300727		2023-04-19	Female	Anterior nasal swab	Cameron	Other (use comments)
-TX-DSHS-25773	TX-M06018-230516	ASC2300728		2023-04-20	Female	Anterior nasal swab	Harris	Other (use comments)
-TX-DSHS-25774	TX-M06018-230516	ASC2300746		#N/A	#N/A	Unknown		#N/A
-TX-DSHS-25775	TX-M06018-230516	PositiveSARS		#N/A	#N/A	Unknown		#N/A
-TX-DSHS-25776	TX-M06018-230516	NegativePV1		#N/A	#N/A	Unknown		#N/A
