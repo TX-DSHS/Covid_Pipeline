@@ -47,7 +47,13 @@ echo "The analysis of covid sequencing run" ${1} "was executed with " $0 > $base
 
 #run cecret
 echo "running Cecret pipeline" 1>>$basedir/run_Cecret.log
-/work/software/nextflow run $install_dir/Cecret/Cecret_DSHS_midnight_pango_v4.1plus_usher.nf -c $install_dir/Cecret/configs/docker.config 2>$basedir/run_Cecret.err
+
+source $install_dir/miniconda3/etc/profile.d/conda.sh
+conda activate covid_illumina
+
+nextflow run $install_dir/Cecret/Cecret_DSHS_midnight_pango_v4.1plus_usher.nf -c $install_dir/Cecret/configs/docker.config 2>$basedir/run_Cecret.err
+#/work/software/nextflow run $install_dir/Cecret/Cecret_DSHS_midnight_pango_v4.1plus_usher.nf -c $install_dir/Cecret/configs/docker.config 2>$basedir/run_Cecret.err
+conda deactivate
 # if the run is not successful, exit the script
 if [ $? -ne 0 ]; then
     echo "The Cecret pipeline failed" 1>>$basedir/run_Cecret.log

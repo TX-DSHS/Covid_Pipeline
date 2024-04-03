@@ -2,3 +2,4 @@ cecret_runs/
 .nextflow.log*
 .nextflow/
 work/
+miniconda3/
