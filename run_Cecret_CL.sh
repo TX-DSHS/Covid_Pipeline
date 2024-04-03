@@ -11,7 +11,9 @@
 # bash run_Cecret_CL.sh <run_name>
 
 #set the base directory
-aws_bucket="s3://804609861260-covid-19"
+#aws_bucket="s3://804609861260-covid-19"
+# Read the aws bucket name from file aws_bucket.txt
+aws_bucket=$(cat aws_bucket.txt)
 install_dir=$PWD
 version="v1.0"
 
