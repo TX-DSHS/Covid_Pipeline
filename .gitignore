@@ -3,3 +3,5 @@ cecret_runs/
 .nextflow/
 work/
 miniconda3/
+demo*
+old_demos/
