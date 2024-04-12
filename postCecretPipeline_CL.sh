@@ -169,7 +169,13 @@ grep -f $result.failed -v - | grep -f $result.exclude -v - | cat template/attrib
 
 #################################################################
 # GISAID csv 30 fields
-# 1-submitter,fn,covv_virus_name,covv_type,5-covv_passage,covv_collection_date,covv_location,covv_add_location,covv_host,10-covv_add_host_info,covv_sampling_strategy,covv_gender,covv_patient_age,covv_patient_status,15-covv_specimen,covv_outbreak,covv_last_vaccinated,covv_treatment,covv_seq_technology,20-covv_assembly_method,covv_coverage,covv_orig_lab,covv_orig_lab_addr,covv_provider_sample_id,25-covv_subm_lab,covv_subm_lab_addr,covv_subm_sample_id,covv_authors,covv_comment,30-comment_type
+# 1 submitter,fn,covv_virus_name,covv_type,
+# 5 covv_passage,covv_collection_date,covv_location,covv_add_location,covv_host,
+# 10 covv_add_host_info,covv_sampling_strategy,covv_gender,covv_patient_age,covv_patient_status,
+# 15 covv_specimen,covv_outbreak,covv_last_vaccinated,covv_treatment,covv_seq_technology,
+# 20 covv_assembly_method,covv_coverage,covv_orig_lab,covv_orig_lab_addr,covv_provider_sample_id,
+# 25 covv_subm_lab,covv_subm_lab_addr,covv_subm_sample_id,covv_authors,
+# 29 covv_comment,comment_type
 
 awk -F '\t' -v OFS=',' -v runname="$1" -v authors="$authors" '{ \
 print "TXWGS",runname".fasta","hCoV-19/USA/"$1"/"substr($6,0,4),"betacoronavirus","Original",\
