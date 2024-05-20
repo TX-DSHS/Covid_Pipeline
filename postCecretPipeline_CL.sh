@@ -8,6 +8,8 @@ version="postCecretPipeline version 2.0 for Clear Labs"
 #format         SampleDemo.txt header (tab-delimited)
 # 1-TEXAS-DSHS####	2-Run name	3-DSHS ID	4-Complete/Failed	5-final_collection_date_text	6-final_sex	7-final_source	8-Final_County	9-Reason_for_Sequencing
 
+basedir=$PWD
+aws_bucket="s3://804609861260-covid-19"
 authors=$(head authors.txt)
 
 #==============================================================================
@@ -167,7 +169,13 @@ grep -f $result.failed -v - | grep -f $result.exclude -v - | cat template/attrib
 
 #################################################################
 # GISAID csv 30 fields
-# 1-submitter,fn,covv_virus_name,covv_type,5-covv_passage,covv_collection_date,covv_location,covv_add_location,covv_host,10-covv_add_host_info,covv_sampling_strategy,covv_gender,covv_patient_age,covv_patient_status,15-covv_specimen,covv_outbreak,covv_last_vaccinated,covv_treatment,covv_seq_technology,20-covv_assembly_method,covv_coverage,covv_orig_lab,covv_orig_lab_addr,covv_provider_sample_id,25-covv_subm_lab,covv_subm_lab_addr,covv_subm_sample_id,covv_authors,covv_comment,30-comment_type
+# 1 submitter,fn,covv_virus_name,covv_type,
+# 5 covv_passage,covv_collection_date,covv_location,covv_add_location,covv_host,
+# 10 covv_add_host_info,covv_sampling_strategy,covv_gender,covv_patient_age,covv_patient_status,
+# 15 covv_specimen,covv_outbreak,covv_last_vaccinated,covv_treatment,covv_seq_technology,
+# 20 covv_assembly_method,covv_coverage,covv_orig_lab,covv_orig_lab_addr,covv_provider_sample_id,
+# 25 covv_subm_lab,covv_subm_lab_addr,covv_subm_sample_id,covv_authors,
+# 29 covv_comment,comment_type
 
 awk -F '\t' -v OFS=',' -v runname="$1" -v authors="$authors" '{ \
 print "TXWGS",runname".fasta","hCoV-19/USA/"$1"/"substr($6,0,4),"betacoronavirus","Original",\
@@ -241,9 +249,9 @@ echo "Please see $1.runlist.txt for detailed results" 2>&1 | tee -a $run_dir/$1.
 # rm $result.demo.status.sra
 # cp $SampleDemo $PWD/old_demos/demos_$1.txt
 
-# if [ -e /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip ];
+# if [ -e $basedir/cecret_runs/zipfiles/postCecret_$1.zip ];
 # then
-# rm /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip
+# rm $basedir/cecret_runs/zipfiles/postCecret_$1.zip
 # fi
-# zip -rj /home/dnalab/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
-# aws s3 cp /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip
+# zip -rj $basedir/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
+# aws s3 cp $basedir/cecret_runs/zipfiles/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip

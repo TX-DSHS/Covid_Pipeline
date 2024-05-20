@@ -20,6 +20,8 @@ if [ $# -eq 0 -o "$1" == "-h" ] ; then
 	exit 0
 fi
 	
+basedir=$PWD
+aws_bucket="s3://804609861260-covid-19"
 run_dir=$PWD/cecret_runs/$1
 result=$run_dir/'run_results_'$1.txt
 SampleDemo='demo_'$1.txt
@@ -228,9 +230,9 @@ rm $result.fastqnames
 rm $result.demo.status.sra
 cp $SampleDemo $PWD/old_demos/demos_$1.txt
 
-if [ -e /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip ];
+if [ -e $basedir/cecret_runs/zipfiles/postCecret_$1.zip ];
 then
-rm /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip
+rm $basedir/cecret_runs/zipfiles/postCecret_$1.zip
 fi
-zip -rj /home/dnalab/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
-aws s3 cp /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip
+zip -rj $basedir/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
+aws s3 cp $basedir/cecret_runs/zipfiles/postCecret_$1.zip $aws_bucket/cecret_runs/zip_files/postCecret_$1.zip

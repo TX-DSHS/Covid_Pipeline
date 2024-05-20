@@ -1,0 +1,7 @@
+cecret_runs/
+.nextflow.log*
+.nextflow/
+work/
+miniconda3/
+demo*
+old_demos/
