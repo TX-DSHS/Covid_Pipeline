@@ -3,7 +3,6 @@
 # The script will download the sequencing run data from the S3 bucket, run the Cecret pipeline, and upload the results back to the S3 bucket
 # The script will also run the postCecretPipeline.sh script if the demo file is found
 # How to use this script
-
 # Usage:
 # bash run_Cecret.sh <sequencing_run>
 # Help:

@@ -5,5 +5,7 @@ work/
 miniconda3/
 demo*
 old_demos/
-sra/
+asperassh/
+gisaid_cli2/
+
 

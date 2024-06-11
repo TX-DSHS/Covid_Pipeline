@@ -3,6 +3,7 @@ Texas DSHS Sars-CoV2 pipeline is designed to process Sars-CoV2 samples using the
 https://github.com/UPHL-BioNGS/Cecret
 
 ## The pipeline can be installed in /bioinformatics/ partition of AWS EC2 by:
+
 ```bash
 git clone https://github.com/TX-DSHS/Covid_pipeline.git -b bfx
 
@@ -66,4 +67,3 @@ Please make sure to update tests as appropriate.
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
-
