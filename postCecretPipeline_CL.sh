@@ -12,6 +12,8 @@ basedir=$PWD
 aws_bucket="s3://804609861260-covid-19"
 authors=$(head authors.txt)
 
+source /home/dnalab/miniconda3/etc/profile.d/conda.sh
+conda activate covid
 #==============================================================================
 if [ $# -eq 0 -o "$1" == "-h" ] ; then
 
@@ -25,7 +27,7 @@ fi
 run_dir=$PWD/cecret_runs/$1
 echo $run_dir
 result=$run_dir'/cecret/cecret_results.txt'
-SampleDemo='demo_'$1.txt
+SampleDemo=$run_dir/download/'demo_'$1.txt
 primer=$3
 
 if [ -e $result ]; then
@@ -57,36 +59,32 @@ echo "Processing "$1"..." 2>&1 | tee -a $run_dir/$1.postCecret.log
 echo "Primer set: "$primer 2>&1 | tee -a $run_dir/$1.postCecret.log
 echo "##################################################################################################" 2>&1 | tee -a $run_dir/$1.postCecret.log
 
+# Remove the postfix added by Clear Labs system to the sample id.
+python3 convertFileName.py $result $result.tmp
+
 # result.short
-# 1- sample_id,2-sample, 3-num_N, 4-pangolin_QC, 5-pangolineage
-awk -F '\t' '{print $1, $2, $7, $25, $3}' OFS="\t" $result > $result.short
-sed 1d $result.short | awk -F '\t' '$2=="Undetermined" || $4=="fail" || $3>=15000 {print $2}' - | sort > $result.failed
-sed 1d $result.short | awk -F '\t' '$2=="Undetermined" || $4=="NA" || $3>=15000 {print $2}' - | sort >> $result.failed
-sed 1d $result.short | awk -F '\t' '{if($2!="Undetermined" && $3<15000 && $4=="pass" ){ print $2"\tComplete" } else {print $2"\tFailed"} }' - > $result.status
+# 1- sample_id, 2-num_N, 3-pangolin_QC, 4-pangolineage
+
+awk -F '\t' '{print $1, $7, $25, $3, $2}' OFS="\t" $result.tmp > $result.short
+sed 1d $result.short | awk -F '\t' '$3=="fail" || $2>=15000 {print $1}' - | sort > $result.failed
+
+sed 1d $result.short | awk -F '\t' '{if($2<15000 && $3=="pass" ){ print $1"\tComplete" } else {print $1"\tFailed"} }' - > $result.status
 
 #################################################################
 # Generate compiled and all sample tables $result.demo
-join -1 1 -2 1 -a1 <( sort $SampleDemo ) <( sed 1d $result.short | sort ) -t $'\t' | sort -t '-' -k3n - > $result.demo
-# $result.demo header
+join -1 1 -2 1 -a2 <( sed 1d $result.short | sort ) <( sort $SampleDemo ) -t $'\t' | sort -t '-' -k3n - > $result.demo
 
-# 1-Run name	#2-Run_name 3-DSHS ID	4-Complete/Failed	5-final_collection_date_text	6-final_sex	
-# 7-final_source	8-Final_County	9-Reason_for_Sequencing 
-# 10-sample_id   11-num_N 12-pangolin_QC #13-pangoLineage 
 
-join -1 1 -2 1 -a1 <( sort $result.status ) <( sort $result.demo ) -t $'\t' | sort -t '-' -k3n -  > $result.demo.status
+join -1 1 -2 1 -a1 <( sort $result.demo ) <( sort $result.status ) -t $'\t' | sort -t '-' -k3n -  > $result.demo.status
 
-# 1-sample_id   2-QC_status    
-# 3-Run_name 4-DSHS_ID	5-Complete/Failed	6-final_collection_date_text	7-final_sex	
-# 8-final_source	9-Final_County	10-Reason_for_Sequencing
-# 11-sample  12-num_N   13-pangolin_status  14-pangoLineage
 
 # Change Sex to unknown if 0, County to empty if 0
 
-awk -F '\t' '{ $7 = ($7 == "0" ? "unknown" : $7)}1' OFS="\t" $result.demo.status |  awk -F '\t' '{ $9 = ($9 == "0" ? "" : $9) } 1 ' OFS="\t" \
+awk -F '\t' '{ $8 = ($8 == "0" ? "unknown" : $8)}1' OFS="\t" $result.demo.status |  awk -F '\t' '{ $10 = ($10 == "0" ? "" : $10) } 1 ' OFS="\t" \
  > $result.demo.status.final
 
 # Exclude Positive/Negative controls
-awk -F '\t' '$4 ~ /Positive/ || $4 ~ /Negative/ {print $1}' $result.demo.status.final | sort > $result.exclude
+awk -F '\t' '$7 ~ /Positive/ || $7 ~ /Negative/ {print $1}' $result.demo.status.final | sort > $result.exclude
 
 # ###############################################################
 # Combine complete samples to one fasta consensus file(minus Undetermined, Positive/Negative Controls) 
@@ -95,9 +93,9 @@ then
 rm $result.filtered
 fi
 
-sed 1d $result | awk -F '\t' '$2!="Undetermined" && $25=="pass" && $7<15000 {print $1}' - | sort | grep -f $result.exclude -v - | sort > $result.filtered
+sed 1d $result.short | awk -F '\t' '$3=="pass" && $2<15000 {print $1}' - | sort | grep -f $result.exclude -v - | sort > $result.filtered
 # Colletion year
-grep -f $result.filtered $result.demo.status.final | awk -F '\t' -v OFS='\t' '{print $1,substr($6, 0, 4)}' - > $result.filtered.year
+grep -f $result.filtered $result.demo.status.final | awk -F '\t' -v OFS='\t' '{print $1,substr($9, 0, 4)}' - > $result.filtered.year
 
 if [ -e $run_dir/$1.fasta ];
 then
@@ -107,9 +105,9 @@ fi
 fasta_dir=$run_dir/reads
 while IFS=$'\t' read -r -a line
 do
-  if [ -e $fasta_dir/${line[0]}.fasta ];
+  if [ -e $fasta_dir/${line[0]}.*.fasta ];
   then
-	sed  "s/>.*/>${line[0]}\/${line[1]}/g" $fasta_dir/${line[0]}.fasta > $fasta_dir/${line[0]}.fa.tmp
+	sed  "s/>.*/>${line[0]}\/${line[1]}/g" $fasta_dir/${line[0]}.*.fasta > $fasta_dir/${line[0]}.fa.tmp
     cat $fasta_dir/${line[0]}.fa.tmp >> $run_dir/$1.fasta
 	rm $fasta_dir/${line[0]}.fa.tmp
   fi
@@ -118,20 +116,16 @@ done < $result.filtered.year
 # Generate txt files for SRA submission and GISAID
 ###############################################################
 # demo.status.final
-# 1-sample_id   2-QC_status    
-# 3-Run_name 4-DSHS_ID	5-Complete/Failed	6-final_collection_date_text	7-final_sex	
-# 8-final_source	9-Final_County	10-Reason_for_Sequencing
-# 11-sample  12-num_N   13-pangolin_status  14-pangoLineage
 
 # SRA_metadata table 17 fields
 # 1-sample_name	library_ID	title	library_strategy	5-library_source	library_selection	library_layout	platform	instrument_model	10-design_description	filetype	filename	filename2	filename3	15-filename4	assembly	17-fasta_file
 ls -1 $run_dir/fastq/*.fastq | xargs -n 1 basename -s .fastq|\
 awk -F '_' -v OFS='\t' '{ print $1, $1".fastq" }' | sort | uniq > $result.fastqnames
-join -1 1 -2 1 -a1 <( sort $result.demo.status.final ) <( sort $result.fastqnames ) -t $'\t' | sort -t '-' -k3n - > $result.demo.status.sra
+join -1 5 -2 1 -a1 <( sort $result.demo.status.final -k5) <( sort $result.fastqnames ) -t $'\t' | sort -t '-' -k3n - > $result.demo.status.sra
 
 awk -F '\t' -v OFS='\t' -v primer="$primer" -v file=$result.fastqnames '{ print $1,$1,"PCR Tiled Amplification of SARS-CoV-2","AMPLICON","VIRAL RNA","PCR","single","OXFORD_NANOPORE","MinION",\
 "Clear Dx SARS-CoV-2 WGS v3.0","fastq",$15,"","","","","",""}' $result.demo.status.sra | \
-grep -f $result.failed -v - | grep -f $result.exclude -v - | cat template/SRA_metadata_template.txt - > $run_dir/$1_SRA_metadata.txt
+grep -f $result.failed -v - | grep -f $result.exclude -v - | sed 1d - | cat template/SRA_metadata_template.txt - > $run_dir/$1_SRA_metadata.txt
 #$15-- fastq
 
 # Collect fastq files to be submitted
@@ -158,7 +152,7 @@ awk -F '\t' -v OFS='\t' '{ print $1,"","PRJNA639066","Severe acute respiratory s
 "hCoV-19/USA/"$1"/"substr($6,0,4),"","","","","","","","",$7,"","","missing","","","","","","",$10,"","","","","TXDSHS","","",""}' $result.demo.status.final |\
 awk -F '\t' '{ $49 = (tolower($41) == "vaccine breakthrough" ? "VBC" : "") } 1' OFS="\t" |\
 awk -F '\t' '{ $41 = (tolower($41) == "surveillance" ? "Baseline surveillance (random sampling)" : "") } 1' OFS="\t" |\
-grep -f $result.failed -v - | grep -f $result.exclude -v - | cat template/attribute_template.txt - \
+grep -f $result.failed -v - | grep -f $result.exclude -v - | sed 1d - | cat template/attribute_template.txt - \
 > $run_dir/$1_attribute.txt
 
 # demo.status.final
@@ -190,13 +184,14 @@ awk -F ',' '{ $10 = (tolower($11) == "vaccine breakthrough" ? "VBC" : "") } 1' O
 awk -F ',' '{ $11 = ($11 == "Surveillance" ? "Baseline surveillance": "") } 1' OFS="," |\
 sed 's/: Version: //g' | sed 's/version //g' |\
 grep -f $result.failed -v - | grep -f $result.exclude -v - |\
+sed 1d - |\
 cat template/GISAID_submission_template.csv - \
  > $run_dir/$1_gisaid_sub.csv
 
 #################################################################
 # runlist 8 fields
-#1-TEXAS-DSHS#	2-Sequencing_run	3-DSHS_id	4-Completed/Failed	5-Utah_Lineage	6-num_N	7-Pangolin_status 8-C/FComments
-echo "TEXAS-DSHS#	Sequencing_run	DSHS_id	Completed/Failed	Utah_Lineage	num_N	Pangolin_status	C/F_Comments" > $run_dir/$1.runlist.txt
+#1-TEXAS-DSHS#	2-Sequencing_run	3-DSHS_id	4-Completed/Failed	5-Lineage	6-num_N	7-Pangolin_status 8-C/FComments
+echo "TEXAS-DSHS#	Sequencing_run	DSHS_id	Completed/Failed  Lineage	num_N	Pangolin_status	C/F_Comments" > $run_dir/$1.runlist.txt
 awk -F '\t' -v OFS='\t' '{ print $1,$3,$4,$2,$14,$12,$13  }' $result.demo.status.final | grep -v 'Undetermined' |\
 awk -F '\t' -v OFS='\t' '{ if($7=="fail") $8="Failed QC"; else $8="";print $0 } ' |\
 awk -F '\t' -v OFS='\t' '{ if($7=="pass" && $6>15000) $8="N>15000";print $0 } '|\
