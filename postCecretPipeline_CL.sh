@@ -1,252 +1,306 @@
-#!/bin/bash      
-version="postCecretPipeline version 2.0 for Clear Labs"
-#title          postCecretPipeline_CL.sh
-#description    
-#author         Jie.Lu@dshs.texas.gov
-#date           20230925
-#usage          bash postCecretPipeline_CL.sh <RUN_NAME> <SampleDemo.txt> <Primer (default=Artic protocol V3)>[-h]
-#format         SampleDemo.txt header (tab-delimited)
-# 1-TEXAS-DSHS####	2-Run name	3-DSHS ID	4-Complete/Failed	5-final_collection_date_text	6-final_sex	7-final_source	8-Final_County	9-Reason_for_Sequencing
+#!/bin/sh
 
-basedir=$PWD
-aws_bucket="s3://804609861260-covid-19"
-authors=$(head authors.txt)
+######################################################################################################################################################
+#
+# Title: postCecretPipeline_CL_sb.sh
+#
+# Description: This script creates post analysis files for SRA and GISAID submission. 
+#
+# Usage: bash postCecretPipeline_CL_sb.sh <run_name> [-h]
+# Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820
+#
+# Author(s): jie.lu@dshs.texas.gov & richard.bovio@dshs.texas.gov
+# Date last updated: 2024-09-04
+#
+######################################################################################################################################################
 
-source /home/dnalab/miniconda3/etc/profile.d/conda.sh
-conda activate covid
-#==============================================================================
+# If no arguments are provided OR the <run_name> == '-h'
 if [ $# -eq 0 -o "$1" == "-h" ] ; then
-
-	echo "Usage: `basename $0` <RUN_NAME> <SampleDemo.txt (tab-delimited default=demo.txt)> <Primer (default=Artic protocol V3)>[-h]"
-	echo "Note:   Please copy Column A to I from all_samples tab of the populated RUN_NAME_demos.xlsx file"
-    echo "Note:   SampleDemo.txt header(tab-delimited)"
-    echo "1-TEXAS-DSHS####	2-Run name	3-DSHS ID	4-Complete/Failed	5-final_collection_date_text	6-final_sex	7-final_source	8-Final_County	9-Reason_for_Sequencing"
+  echo "No arguments provided"
+  echo "Usage: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh <run_name>"
+  echo "Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820"
 	exit 0
 fi
-	
-run_dir=$PWD/cecret_runs/$1
-echo $run_dir
-result=$run_dir'/cecret/cecret_results.txt'
-SampleDemo=$run_dir/download/'demo_'$1.txt
-primer=$3
 
+# Create variables for cecret analysis
+basedir="/bioinformatics/Covid_Pipeline/"
+# basedir=$PWD # UNCOMMENT ONCE PIPELINE IS COMPLETE AND LAMBDA IS TURNED BACK ON 
+run_dir="${basedir}cecret_runs/$1"
+# run_dir=$PWD/cecret_runs/$1 # UNCOMMENT ONCE PIPELINE IS COMPLETE AND LAMBDA IS TURNED BACK ON 
+result=$run_dir'/cecret/cecret_results.txt'
+demo=$run_dir/download/'demo_'$1.txt
+primer="Artic Network - VarSkip Primer Design"
+version="v1.0"
+authors=$(head /bioinformatics/Covid_Pipeline/authors.txt)
+
+echo "Running postCecretPipeline_CL.sh "$version 2>&1 | tee $run_dir/$1.postCecret.log
+echo `date` 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "Primer set: "$primer 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+
+## Activate conda environment
+#echo "Activating conda environment..." 2>&1 | tee -a $run_dir/$1.postCecret.log
+#echo ""  2>&1 | tee -a $run_dir/$1.postCecret.log
+#source /bioinformatics/Covid_Pipeline/miniconda3/etc/profile.d/conda.sh
+#conda activate covid
+
+# Check if cecret_results.txt file was generated
+echo "Checking if cecret_results.txt was generated..." 2>&1 | tee -a $run_dir/$1.postCecret.log
 if [ -e $result ]; then
-    echo "Processing run result of "$1
+  echo "cecret_results.txt file was successfully generated" 2>&1 | tee -a $run_dir/$1.postCecret.log
+  echo ""  2>&1 | tee -a $run_dir/$1.postCecret.log 
+  echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $run_dir/$1.postCecret.log
 else
-    echo "Error: No Cecret run result found for "$1
+  echo "ERROR: cecret_results.txt was NOT generated" 2>&1 | tee -a $run_dir/$1.postCecret.log
 	exit 1
 fi
-	
-if [ "$3" == "" ] ; then
-    primer="Midnight 1200 PCR-tiling of SARS-CoV-2 cDNA"
-fi
 
-if [ -e $SampleDemo ]; then
-   echo "The Demo File is: "$SampleDemo
-   dos2unix $SampleDemo
-else
-   echo "Error: No Demo file Found. Please provide the demo file."
-   exit 1
-fi
+# Remove the suffix added by Clear Labs system from the Sample_ID
+python3 /bioinformatics/Covid_Pipeline/convertFileName.py $result $result.tmp
 
+# Generate short file (5 columns):
+# 1-sample_id  sample	pangolin_lineage  num_N	
+# 5-pangolin_qc_status
 
-#################################################################
-# mark the status of sample with "Complete" or "failed"
-echo "Running "$version 2>&1 | tee $run_dir/$1.postCecret.log
-echo `date` 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "##################################################################################################" 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "Processing "$1"..." 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "Primer set: "$primer 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "##################################################################################################" 2>&1 | tee -a $run_dir/$1.postCecret.log
+awk -F '\t' '{print $1, $2, $3, $7, $25}' OFS="\t" $result.tmp > $result.short
 
-# Remove the postfix added by Clear Labs system to the sample id.
-python3 convertFileName.py $result $result.tmp
+# Generate failed file (1 column; contains only failed samples):
+# 1-sample_id
+sed 1d $result.short | awk -F '\t' '$5=="fail" || $4>=15000 {print $1}' - | sort > $result.failed
 
-# result.short
-# 1- sample_id, 2-num_N, 3-pangolin_QC, 4-pangolineage
+# Genereate status file (2 columns):
+# 1-sample_id  status
+sed 1d $result.short | awk -F '\t' '{if($4<15000 && $5=="pass" ){ print $1"\tComplete" } else {print $1"\tFailed"} }' - > $result.status
 
-awk -F '\t' '{print $1, $7, $25, $3, $2}' OFS="\t" $result.tmp > $result.short
-sed 1d $result.short | awk -F '\t' '$3=="fail" || $2>=15000 {print $1}' - | sort > $result.failed
+# Generate demo file by joining short and uploaded demo file (13 columns)
+join -1 1 -2 1 -a2 <( sed 1d $result.short | sort ) <( sort $demo ) -t $'\t' | sort -t '-' -k3n - > $result.demo
 
-sed 1d $result.short | awk -F '\t' '{if($2<15000 && $3=="pass" ){ print $1"\tComplete" } else {print $1"\tFailed"} }' - > $result.status
+# Generate demo file by joining status and uploaded demo file (14 columns)
+join -1 1 -2 1 -a2 <( sort $result.status ) <( sort $result.demo ) -t $'\t' | sort -t '-' -k3n -  > $result.demo.status
 
-#################################################################
-# Generate compiled and all sample tables $result.demo
-join -1 1 -2 1 -a2 <( sed 1d $result.short | sort ) <( sort $SampleDemo ) -t $'\t' | sort -t '-' -k3n - > $result.demo
+# Remove status header
+sed 1d $result.demo.status > $result.demo.status.tmp
 
-
-join -1 1 -2 1 -a1 <( sort $result.demo ) <( sort $result.status ) -t $'\t' | sort -t '-' -k3n -  > $result.demo.status
-
-
+# Generate demo.status.final (14 columns)
 # Change Sex to unknown if 0, County to empty if 0
-
-awk -F '\t' '{ $8 = ($8 == "0" ? "unknown" : $8)}1' OFS="\t" $result.demo.status |  awk -F '\t' '{ $10 = ($10 == "0" ? "" : $10) } 1 ' OFS="\t" \
+awk -F '\t' '{ $11 = ($11 == "0" ? "unknown" : $11) } 1' OFS="\t" $result.demo.status.tmp |  awk -F '\t' '{ $13 = ($13 == "0" ? "" : $13) } 1' OFS="\t" \
  > $result.demo.status.final
 
-# Exclude Positive/Negative controls
-awk -F '\t' '$7 ~ /Positive/ || $7 ~ /Negative/ {print $1}' $result.demo.status.final | sort > $result.exclude
+# Generate exclude file (1 column; contains only Positive/Negative controls)
+awk -F '\t' '$8 ~ /Positive/ || $8 ~ /Negative/ || $8 ~ /PT/ {print $1}' $result.demo.status.final | sort > $result.exclude
 
-# ###############################################################
-# Combine complete samples to one fasta consensus file(minus Undetermined, Positive/Negative Controls) 
-if [ -e $result.filtered ];
-then
-rm $result.filtered
-fi
+# Generate filtered file (1 column; contains only passing samples, minus Positive/Negative/PT controls)
+# 1-sample_ID
+sed 1d $result.short | awk -F '\t' '$5=="pass" && $4<15000 {print $1}' - | sort | grep -f $result.exclude -v - | sort > $result.filtered
 
-sed 1d $result.short | awk -F '\t' '$3=="pass" && $2<15000 {print $1}' - | sort | grep -f $result.exclude -v - | sort > $result.filtered
-# Colletion year
-grep -f $result.filtered $result.demo.status.final | awk -F '\t' -v OFS='\t' '{print $1,substr($9, 0, 4)}' - > $result.filtered.year
+# Generate filtered.year file (2 columns, contains only passing samples, minus Positive/Negative/PT controls)
+# 1-sample_ID  year
+grep -f $result.filtered $result.demo.status.final | awk -F '\t' -v OFS='\t' '{print $1,substr($10, 0, 4)}' - > $result.filtered.year
 
-if [ -e $run_dir/$1.fasta ];
-then
-rm $run_dir/$1.fasta
-fi
 
-fasta_dir=$run_dir/reads
-while IFS=$'\t' read -r -a line
-do
-  if [ -e $fasta_dir/${line[0]}.*.fasta ];
-  then
-	sed  "s/>.*/>${line[0]}\/${line[1]}/g" $fasta_dir/${line[0]}.*.fasta > $fasta_dir/${line[0]}.fa.tmp
-    cat $fasta_dir/${line[0]}.fa.tmp >> $run_dir/$1.fasta
-	rm $fasta_dir/${line[0]}.fa.tmp
-  fi
-done < $result.filtered.year
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
 
-# Generate txt files for SRA submission and GISAID
-###############################################################
-# demo.status.final
 
-# SRA_metadata table 17 fields
-# 1-sample_name	library_ID	title	library_strategy	5-library_source	library_selection	library_layout	platform	instrument_model	10-design_description	filetype	filename	filename2	filename3	15-filename4	assembly	17-fasta_file
-ls -1 $run_dir/fastq/*.fastq | xargs -n 1 basename -s .fastq|\
-awk -F '_' -v OFS='\t' '{ print $1, $1".fastq" }' | sort | uniq > $result.fastqnames
-join -1 5 -2 1 -a1 <( sort $result.demo.status.final -k5) <( sort $result.fastqnames ) -t $'\t' | sort -t '-' -k3n - > $result.demo.status.sra
+# SRA_metadata table (17 columns):
+# 1-sample_name  library_ID  title  library_strategy
+# 5-library_source  library_selection  library_layout  platform  instrument_model
+# 10-design_description  filetype  filename  filename2  filename3
+# 15-filename4  assembly  fasta_file
 
-awk -F '\t' -v OFS='\t' -v primer="$primer" -v file=$result.fastqnames '{ print $1,$1,"PCR Tiled Amplification of SARS-CoV-2","AMPLICON","VIRAL RNA","PCR","single","OXFORD_NANOPORE","MinION",\
-"Clear Dx SARS-CoV-2 WGS v3.0","fastq",$15,"","","","","",""}' $result.demo.status.sra | \
-grep -f $result.failed -v - | grep -f $result.exclude -v - | sed 1d - | cat template/SRA_metadata_template.txt - > $run_dir/$1_SRA_metadata.txt
-#$15-- fastq
+# This creates an output file ($result.fastqnames) which will contain unique, sorted entries of sample IDs and their corresponding filenames in a tab-separated format for all samples sequenced in the run.
+ls -1 $run_dir/fastq/*.fastq | xargs -n 1 basename -s .fastq | awk -F '_' -v OFS='\t' '{ print $1, $1".fastq" }' | sort | uniq > $result.fastqnames
 
-# Collect fastq files to be submitted
-if [ -e $run_dir/SRA_fastq ];
-then 
+# The resulting file $result.demo.status.sra will contain the joined data, with all entries from the $result.demo.status.final file, sorted by the 3rd field in the context of hyphen-separated values.
+join -1 1 -2 3 -a2 <( sort $result.fastqnames ) <( sort $result.demo.status.final ) -t $'\t' | sort -t '-' -k3n - > $result.demo.status.sra
+
+# Generate SRA_metadata file for SRA submission, filtering out unwanted entries and combining them with a predefined template.
+awk -F '\t' -v OFS='\t' '{ print $3,$3,"PCR Tiled Amplification of SARS-CoV-2","AMPLICON","VIRAL RNA","PCR","single","OXFORD_NANOPORE","MinION","Clear Dx SARS-CoV-2 WGS v3.0","fastq",$2,"","","","","" }' $result.demo.status.sra | grep -f $result.failed -v - | grep -f $result.exclude -v - | cat /bioinformatics/Covid_Pipeline/template/SRA_metadata_template.txt - > $run_dir/$1_SRA_metadata.txt
+
+# Remove pre-existing fastq files from $run_dir/SRA_fastq
+if [ -e $run_dir/SRA_fastq ]; then 
   rm -r $run_dir/SRA_fastq
 fi
 mkdir $run_dir/SRA_fastq
 
+# Collect fastq files to be submitted
+# This reads each line from a metadata file ($run_dir/$1_SRA_metadata.txt), checks if a file specified by the 12th field (filename) of the line exists in a source directory ($run_dir/fastq/), and if it does, copies that file to a destination directory ($run_dir/SRA_fastq/).
 while IFS=$'\t' read -r -a line
 do
-  #echo ${line[11]}, ${line[12]}
-  if [ -e $run_dir/fastq/${line[11]} ];
-  then
+  if [ -e $run_dir/fastq/${line[11]} ]; then
     cp $run_dir/fastq/${line[11]} $run_dir/SRA_fastq/
   fi
 done < $run_dir/$1_SRA_metadata.txt
 
-# #################################################################
-# Bioattibute table 49 fields
-# 1-*sample_name	sample_title	bioproject_accession	*organism	5-strain	*collected_by	*collection_date	*geo_loc_name	*host	10-*host_disease	*isolate	*isolation_source	antiviral_treatment_agent	collection_device	15-collection_method	date_of_prior_antiviral_treat	date_of_prior_sars_cov_2_infection	date_of_sars_cov_2_vaccination	exposure_event	20-geo_loc_exposure	gisaid_accession	gisaid_virus_name	host_age	host_anatomical_material	25-host_anatomical_part	host_body_product	host_disease_outcome	host_health_state	host_recent_travel_loc	30-host_recent_travel_return_date	host_sex	host_specimen_voucher	host_subject_id	lat_lon	passage_method	35-passage_number	prior_sars_cov_2_antiviral_treat	prior_sars_cov_2_infection	prior_sars_cov_2_vaccination	40-purpose_of_sampling	purpose_of_sequencing	sars_cov_2_diag_gene_name_1	sars_cov_2_diag_gene_name_2	sars_cov_2_diag_pcr_ct_value_1	45-sars_cov_2_diag_pcr_ct_value_2	sequenced_by	vaccine_received	virus_isolate_of_prior_infection	49-description
-awk -F '\t' -v OFS='\t' '{ print $1,"","PRJNA639066","Severe acute respiratory syndrome coronavirus 2","SARS-CoV-2/USA/"$1"/"substr($6,0,4),\
-"Texas Department of State Health Services",$6,"USA: Texas","Homo sapiens","COVID-19","missing",$8,"","","","","","","","","",\
-"hCoV-19/USA/"$1"/"substr($6,0,4),"","","","","","","","",$7,"","","missing","","","","","","",$10,"","","","","TXDSHS","","",""}' $result.demo.status.final |\
-awk -F '\t' '{ $49 = (tolower($41) == "vaccine breakthrough" ? "VBC" : "") } 1' OFS="\t" |\
-awk -F '\t' '{ $41 = (tolower($41) == "surveillance" ? "Baseline surveillance (random sampling)" : "") } 1' OFS="\t" |\
-grep -f $result.failed -v - | grep -f $result.exclude -v - | sed 1d - | cat template/attribute_template.txt - \
-> $run_dir/$1_attribute.txt
+# Bioattibute table (49 fields):
+# 1-*sample_name	sample_title	bioproject_accession	*organism
+#	5-strain	*collected_by	*collection_date	*geo_loc_name	*host
+#	10-*host_disease	*isolate	*isolation_source	antiviral_treatment_agent	collection_device
+#	15-collection_method	date_of_prior_antiviral_treat	date_of_prior_sars_cov_2_infection	date_of_sars_cov_2_vaccination	exposure_event
+#	20-geo_loc_exposure	gisaid_accession	gisaid_virus_name	host_age	host_anatomical_material
+#	25-host_anatomical_part	host_body_product	host_disease_outcome	host_health_state	host_recent_travel_loc
+#	30-host_recent_travel_return_date	host_sex	host_specimen_voucher	host_subject_id	lat_lon	passage_method
+#	35-passage_number	prior_sars_cov_2_antiviral_treat	prior_sars_cov_2_infection	prior_sars_cov_2_vaccination
+#	40-purpose_of_sampling	purpose_of_sequencing	sars_cov_2_diag_gene_name_1	sars_cov_2_diag_gene_name_2	sars_cov_2_diag_pcr_ct_value_1
+#	45-sars_cov_2_diag_pcr_ct_value_2	sequenced_by	vaccine_received	virus_isolate_of_prior_infection  description
 
-# demo.status.final
-# 1-sample_id   2-QC_status    
-# 3-Run_name 4-DSHS_ID	5-Complete/Failed	6-final_collection_date_text	7-final_sex	
-# 8-final_source	9-Final_County	10-Reason_for_Sequencing
-# 11-sample  12-num_N   13-pangolin_status  14-pangoLineage
+# Generate the attributes file for SRA submission, filtering out unwanted entries and combining them with a predefined template.
+awk -F '\t' -v OFS='\t' '{ print $1,"","PRJNA639066","Severe acute respiratory syndrome coronavirus 2","SARS-CoV-2/USA/"$1"/"substr($10,0,4),"Texas Department of State Health Services",$10,"USA: Texas","Homo sapiens","COVID-19","missing",$12,"","","","","","","","","","hCoV-19/USA/"$1"/"substr($10,0,4),"","","","","","","","",$11,"","","missing","","","","","","",$14,"","","","","TXDSHS","","",""}' $result.demo.status.final | awk -F '\t' '{ $49 = (tolower($41) == "vaccine breakthrough" ? "VBC" : "") } 1' OFS="\t" | awk -F '\t' '{ $41 = (tolower($41) == "surveillance" ? "Baseline surveillance (random sampling)" : "") } 1' OFS="\t" | grep -f $result.failed -v - | grep -f $result.exclude -v - | cat /bioinformatics/Covid_Pipeline/template/attribute_template.txt - > $run_dir/$1_attribute.txt
 
-#################################################################
-# GISAID csv 30 fields
-# 1 submitter,fn,covv_virus_name,covv_type,
-# 5 covv_passage,covv_collection_date,covv_location,covv_add_location,covv_host,
-# 10 covv_add_host_info,covv_sampling_strategy,covv_gender,covv_patient_age,covv_patient_status,
-# 15 covv_specimen,covv_outbreak,covv_last_vaccinated,covv_treatment,covv_seq_technology,
-# 20 covv_assembly_method,covv_coverage,covv_orig_lab,covv_orig_lab_addr,covv_provider_sample_id,
-# 25 covv_subm_lab,covv_subm_lab_addr,covv_subm_sample_id,covv_authors,
-# 29 covv_comment,comment_type
 
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+
+
+# GISAID file (30 fields):
+# 1 submitter  fn  covv_virus_name  covv_type
+# 5 covv_passage  covv_collection_date  covv_location  covv_add_location  covv_host
+# 10 covv_add_host_info  covv_sampling_strategy  covv_gender  covv_patient_age  covv_patient_status
+# 15 covv_specimen  covv_outbreak  covv_last_vaccinated  covv_treatment  covv_seq_technology
+# 20 covv_assembly_method  covv_coverage  covv_orig_lab  covv_orig_lab_addr  covv_provider_sample_id
+# 25 covv_subm_lab  covv_subm_lab_addr  covv_subm_sample_id  covv_authors  covv_comment,comment_type
+
+# Generate the GISAID csv for GISAID submission, filtering out unwanted entries and combining them with a predefined template.
 awk -F '\t' -v OFS=',' -v runname="$1" -v authors="$authors" '{ \
-print "TXWGS",runname".fasta","hCoV-19/USA/"$1"/"substr($6,0,4),"betacoronavirus","Original",\
-$6,"North America/ USA/ Texas/ "$6,"","Human","",\
-$10,$7,"unknown","unknown",$8,\
+print "TXWGS",$3".fasta","hCoV-19/USA/"$1"/"substr($10,0,4),"betacoronavirus","Original",\
+$10,"North America/ USA/ Texas/ "$13,"unknown","Human","",\
+$14,$11,"unknown","unknown",$12,\
 "unknown","unknown","unknown","OXFORD NANOPORE MinION","Minimap2/Medaka",\
 "","TXDSHS","\"1100 W 49th Street, Austin TX 78756\"","","TXDSHS",\
 "\"1100 W 49th Street, Austin TX 78756\"","",authors,"","",\
 "","","","",""}' $result.demo.status.final |\
-
 awk -F ',' '{ $10 = (tolower($11) == "vaccine breakthrough" ? "VBC" : "") } 1' OFS="," |\
-awk -F ',' '{ $11 = ($11 == "Surveillance" ? "Baseline surveillance": "") } 1' OFS="," |\
+awk -F ',' '{ $11 = (tolower($11) == "surveillance" ? "Baseline surveillance": "") } 1' OFS="," |\
 sed 's/: Version: //g' | sed 's/version //g' |\
 grep -f $result.failed -v - | grep -f $result.exclude -v - |\
-sed 1d - |\
-cat template/GISAID_submission_template.csv - \
+cat /bioinformatics/Covid_Pipeline/template/GISAID_submission_template.csv - \
  > $run_dir/$1_gisaid_sub.csv
 
-#################################################################
-# runlist 8 fields
-#1-TEXAS-DSHS#	2-Sequencing_run	3-DSHS_id	4-Completed/Failed	5-Lineage	6-num_N	7-Pangolin_status 8-C/FComments
-echo "TEXAS-DSHS#	Sequencing_run	DSHS_id	Completed/Failed  Lineage	num_N	Pangolin_status	C/F_Comments" > $run_dir/$1.runlist.txt
-awk -F '\t' -v OFS='\t' '{ print $1,$3,$4,$2,$14,$12,$13  }' $result.demo.status.final | grep -v 'Undetermined' |\
+# Remove pre-existing fasta consensus files
+if [ -e $run_dir/$1.fasta ]; then
+  rm $run_dir/$1.fasta 
+fi
+
+# Generate consensus fasta file
+fasta_dir=$run_dir/reads
+while IFS=$'\t' read -r -a line
+do
+  if [ -e $fasta_dir/${line[0]}.*.fasta ]; then
+	  sed  "s/>.*/>${line[0]}\/${line[1]}/g" $fasta_dir/${line[0]}.*.fasta | sed  's/>/>hCoV-19\/USA\//g' > $fasta_dir/${line[0]}.fa.tmp
+    cat $fasta_dir/${line[0]}.fa.tmp >> $run_dir/$1.fasta
+	  rm $fasta_dir/${line[0]}.fa.tmp
+  fi
+done < $result.filtered.year
+
+ 
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+
+
+# runlist (8 fields):
+# 1 TEXAS-DSHS  Sequencing_run  DSHS_id  Completed/Failed
+# 5 Lineage  num_N  Pangolin_status C/FComments
+echo -e "TEXAS_DSHS\tSequencing_Run\tSequencing_ID\tSample_Type\tLineage\tnum_N\tPangolin_Status\tPangolin_Status_Comments" > $run_dir/$1.runlist.txt
+awk -F '\t' -v OFS='\t' '{ print $1,$7,$8,$2,$4,$5,$6  }' $result.demo.status.final | grep -v 'Undetermined' |\
 awk -F '\t' -v OFS='\t' '{ if($7=="fail") $8="Failed QC"; else $8="";print $0 } ' |\
 awk -F '\t' -v OFS='\t' '{ if($7=="pass" && $6>15000) $8="N>15000";print $0 } '|\
-awk -F '\t' -v OFS='\t' '{ if ($3 ~ /Positive/ || $3 ~ /Negative/) $4="Control";print $0}' |\
-awk -F '\t' -v OFS='\t' '{ if ($3 ~ /Positive/ || $3 ~ /Negative/) $8="";print $0}' \
+awk -F '\t' -v OFS='\t' '{ if ($3 ~ /Positive/ || $3 ~ /Negative/ || $3 ~ /PT/) $4="Control";print $0}' |\
+awk -F '\t' -v OFS='\t' '{ if ($3 ~ /Positive/ || $3 ~ /Negative/ || $3 ~ /PT/) $8="";print $0}' \
  >> $run_dir/$1.runlist.txt
 
-# demo.status.final
-# 1-sample_id   2-QC_status(Complete/Failed)    
-# 3-Run_name 4-DSHS_ID	5-Complete/Failed(blank)	6-final_collection_date_text	7-final_sex	
-# 8-final_source	9-Final_County	10-Reason_for_Sequencing
-# 11-sample  12-num_N   13-pangolin_status  14-pangoLineage
+
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
 
 
-################################################################
 # Print Run Summary
 Total=`grep -f $result.exclude -v $result.demo.status.final | grep -v 'Undetermined' | wc -l`
 NComplete=`awk -F '\t' '$2=="Complete" {print $1}' $result.demo.status.final | grep -f $result.exclude -v | grep -v 'Undetermined' | wc -l`
 Nfail=`awk -F '\t' '$2=="Failed" {print $1}' $result.demo.status.final | grep -f $result.exclude -v | grep -v 'Undetermined' | wc -l`
-echo "Total number of samples: $Total" 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "# Passed samples: $NComplete" 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "# Failed samples: $Nfail" 2>&1 | tee -a $run_dir/$1.postCecret.log
-awk -F '\t' '$5=="Failed" {print $1}' $result.demo.status.final | grep -f $result.exclude -v | grep -v 'Undetermined' > $result.failed.samples
-echo "-----------------------------------------------------------" 2>&1 | tee -a $run_dir/$1.postCecret.log
+
+# Total # Passed/Failed clinical samples
+echo "Total number of clinical samples: $Total" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "# Passed clinical samples: $NComplete" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "# Failed clinical samples: $Nfail" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $run_dir/$1.postCecret.log
+
+# Passed clincial samples
+echo "Passed clinical samples:" 2>&1 | tee -a $run_dir/$1.postCecret.log
+printf "%-15s %-18s %-10s %-10s\n" "TX-DSHS_id" "pangolin_status" "coverage" "numN" 2>&1 | tee -a $run_dir/$1.postCecret.log
+awk -F '\t' '$2=="Complete" {print $1}' $result.demo.status.final | grep -f $result.exclude -v | grep -v 'Undetermined' > $result.passed.samples
+grep -f $result.passed.samples $result.demo.status.final | awk -F '\t' '{printf "%-15s %-18s %-10s %-10s\n", $1, $6, "NA", $5}' 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $run_dir/$1.postCecret.log
+
+# Failed cilincal samples
+echo "Failed clinical samples:" 2>&1 | tee -a $run_dir/$1.postCecret.log
+printf "%-15s %-18s %-10s %-10s\n" "TX-DSHS_id" "pangolin_status" "coverage" "numN" 2>&1 | tee -a $run_dir/$1.postCecret.log
+awk -F '\t' '$2=="Failed" {print $1}' $result.demo.status.final | grep -f $result.exclude -v | grep -v 'Undetermined' > $result.failed.samples
+grep -f $result.failed.samples $result.demo.status.final | awk -F '\t' '{printf "%-15s %-18s %-10s %-10s\n", $1, $6, "NA", $5}' 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $run_dir/$1.postCecret.log
+
+# Controls
 echo "Controls -- Removed from submission files:" 2>&1 | tee -a $run_dir/$1.postCecret.log
-awk -F '\t' '{print $1,$3,$4}' $result.demo.status.final | grep -f $result.exclude | grep -v 'Undetermined' 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "-----------------------------------------------------------" 2>&1 | tee -a $run_dir/$1.postCecret.log
+printf "%-15s %-25s %-10s\n" "TX-DSHS_id" "DSHS_ID" "Status" 2>&1 | tee -a $run_dir/$1.postCecret.log
+awk -F '\t' '{printf "%-15s %-25s %-10s\n", $1,$8,$2}' $result.demo.status.final | grep -f $result.exclude | grep -v 'Undetermined' 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $run_dir/$1.postCecret.log
 
-echo "Failed Samples:" 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "-----------------------------------------------------------" 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "TX-DSHS_id	pangolin_status	coverage	numN" 2>&1 | tee -a $run_dir/$1.postCecret.log
-grep -f $result.failed.samples $result.demo | awk -F '\t' '{print $1, $6, $14, $26}' 2>&1 | tee -a $run_dir/$1.postCecret.log
+# Samples for submission
+echo "# samples in SRA_metadata file: "`sed 1d $run_dir/$1_SRA_metadata.txt | wc -l` 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "# samples in SRA bioattibute file: "`sed 1d $run_dir/$1_attribute.txt | grep 'TX-DSHS' | wc -l`  2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "# sequences in fasta consensus file: "`grep -c '>' $run_dir/$1.fasta` 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "# samples in GISAID csv: "`sed 1d $run_dir/$1_gisaid_sub.csv | wc -l` 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "See $1.runlist.txt for detailed results." 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
 
-echo "-----------------------------------------------------------" 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "# samples to be submitted in GISAID csv: "`sed 1d $run_dir/$1_gisaid_sub.csv | wc -l` 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "# samples to be submitted in SRA_metadata file: "`sed 1d $run_dir/$1_SRA_metadata.txt | wc -l` 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "# samples in Bioattibute file: "`sed 1d $run_dir/$1_attribute.txt | grep 'TX-DSHS' | wc -l`  2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "# seqs in consensus fasta file: "`grep -c '>' $run_dir/$1.fasta` 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo "Please see $1.runlist.txt for detailed results" 2>&1 | tee -a $run_dir/$1.postCecret.log
+# Remove work directory and temporary files
+echo "Removing work directory and temporary files" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+rm -r $run_dir/work
+rm $result.tmp
+rm $result.status
+rm $result.short
+rm $result.exclude
+rm $result.fastqnames
+rm $result.filtered*
+rm $result.failed*
+rm $result.passed*
+rm $result.demo*
 
-# rm $result.filtered*
-# rm $result.status
-# rm $result.failed.samples
-# rm $result.demo
-# rm $result.demo.status
-# rm $result.demo.status.final
-# rm $result.failed*
-# rm $result.exclude
-# rm $result.fastqnames
-# rm $result.demo.status.sra
-# cp $SampleDemo $PWD/old_demos/demos_$1.txt
+# Remove pre-existing postCecret zip results
+if [ -e $basedir/cecret_runs/zip_files/postCecret_$1.zip ]; then
+  rm $basedir/cecret_runs/zip_files/postCecret_$1.zip
+fi
 
-# if [ -e $basedir/cecret_runs/zipfiles/postCecret_$1.zip ];
-# then
-# rm $basedir/cecret_runs/zipfiles/postCecret_$1.zip
-# fi
-# zip -rj $basedir/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
-# aws s3 cp $basedir/cecret_runs/zipfiles/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip
+# Zip and copy postCecret results to AWS S3
+echo "Zipping postCecretPipeline output files" 2>&1 | tee -a $run_dir/$1.postCecret.log
+zip -rj $basedir/cecret_runs/zip_files/postCecret_$1 $run_dir/$1*
+echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
+echo "Transferring postCecretPipeline output files to AWS S3" 2>&1 | tee -a $run_dir/$1.postCecret.log
+aws s3 cp $basedir/cecret_runs/zip_files/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip
+
+## Move demo file to /bioinformatics/Covid_Pipeline/old_demos
+# echo "Moving demo file to /bioinformatics/Covid_Pipeline/old_demos/" 2>&1 | tee -a $run_dir/$1.postCecret.log
+# mv $demo /bioinformatics/Covid_Pipeline/old_demos/
+# mv $demo $PWD/old_demos/ # UNCOMMENT ONCE PIPELINE IS COMPLETE AND LAMBDA IS TURNED BACK ON 
+
+
+
+
