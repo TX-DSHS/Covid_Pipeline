@@ -54,7 +54,7 @@ tar -xvf ${basedir}/download/*.fastas.tar -C ${basedir}/reads # Extract fasta fi
 # Activate conda environment
 echo "Activating conda environment" 2>&1 | tee -a $basedir/run_Cecret.log 
 echo "" 2>&1 | tee -a $basedir/run_Cecret.log 
-source /bioinformatics/Covid_Pipeline/miniconda3/etc/profile.d/conda.sh
+source ${install_dir}/miniconda3/etc/profile.d/conda.sh
 conda activate covid
 
 # Pulling the latest version of Cecret
@@ -123,7 +123,7 @@ if [ -e $demo ]; then
   dos2unix $demo > /dev/null 2>&1
   # Run the script and capture its exit status
   {
-    bash ${install_dir}/check_demo_sb.sh $1
+    bash ${install_dir}/check_demo.sh $1
   } 2>&1 | tee -a $basedir/run_Cecret.log
   # Capture the exit status of the script execution
   status=${PIPESTATUS[0]}
@@ -150,7 +150,7 @@ echo -e "-----------------------------------------------------------\n" 2>&1 | t
 
 
 # Run postCecretPipeline
-bash ${install_dir}/postCecretPipeline_CL_sb.sh $1 2>&1 | tee -a $basedir/run_Cecret.log
+bash ${install_dir}/postCecretPipeline_CL.sh $1 2>&1 | tee -a $basedir/run_Cecret.log
 echo "" 2>&1 | tee -a $basedir/run_Cecret.log
 echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
 echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
