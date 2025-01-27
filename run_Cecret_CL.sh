@@ -10,7 +10,7 @@
 # Example: bash run_Cecret_CL_sb.sh TX-CL001-240820
 #
 # Author(s): jie.lu@dshs.texas.gov & richard.bovio@dshs.texas.gov
-# Date last updated: 2024-09-04
+# Date last updated: 2025-01-16
 #
 #################################################################################
 
@@ -50,6 +50,23 @@ echo "" 2>&1 | tee -a $basedir/run_Cecret.log
 unzip -j ${basedir}/download/$1.zip -d ${basedir}/download/ # Unzip read files
 tar -xvf ${basedir}/download/*.fastqs.tar -C ${basedir}/fastq # Extract fastq files from tar archive
 tar -xvf ${basedir}/download/*.fastas.tar -C ${basedir}/reads # Extract fasta files from tar archive
+
+# Remove trailing line if one is present
+remove_trailing_blank_line() {
+  local file="/bioinformatics/Covid_Pipeline/cecret_runs/$1/download/demo_$1.txt"
+  # Check if file exists
+  if [[ ! -f "$file" ]]; then
+    echo "Error: File '$file' does not exist."
+    exit 1
+  fi
+
+  # Use sed to remove the trailing blank line
+  sed -i ':a;/^[[:space:]]*$/{$d;N;ba}' "$file"
+
+  echo "Trailing blank line removed from '$file'."
+}
+remove_trailing_blank_line "$1"
+
 
 # Activate conda environment
 echo "Activating conda environment" 2>&1 | tee -a $basedir/run_Cecret.log 

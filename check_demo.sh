@@ -25,9 +25,10 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
-run_dir="/bioinformatics/Covid_Pipeline/cecret_runs/$1"
-input_file="/bioinformatics/Covid_Pipeline/cecret_runs/$1/download/demo_$1.txt"
-data_directory="/bioinformatics/Covid_Pipeline/cecret_runs/$1/reads/"
+basedir="/bioinformatics/Covid_Pipeline/cecret_runs"
+run_dir="${basedir}/$1"
+input_file="${run_dir}/download/demo_$1.txt"
+data_directory="${run_dir}/reads/"
 error_encountered=0
 
 # Check if the input file exists
@@ -66,14 +67,13 @@ fi
 # Check date format
 while IFS=$'\t' read -r -a fields; do
   date_value="${fields[3]}"  # 4th field (0-based indexing)
-  if [ "$date_value" != "#N/A" ] && ! [[ "$date_value" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && ! [[ "$date_value" == "Complete/Failed" ]]; then
+  if [ "$date_value" != "#N/A" ] && ! [[ "$date_value" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && ! [[ "$date_value" == "Cecret_qc_status" ]]; then
     echo "Error: Date format '$date_value' is not YYYY-MM-DD"
     error_encountered=1
-  elif [ "$date_value" == "Complete/Failed" ]; then
+  elif [ "$date_value" == "Cecret_qc_status" ]; then
     echo "Check: column header exists"
     echo ""
   else 
-	  # echo "$date_value is in the correct format YYYY-MM-DD or #N/A (control)."
     echo "Check: $date_value is in the correct format YYYY-MM-DD or #N/A (control)"
   fi
 done < "$input_file"
@@ -85,7 +85,7 @@ while IFS=$'\t' read -r id _; do
   # Use find to check for the existence of a file containing the ID in the data directory
   if find "$data_directory" -type f -name "*$id*" | grep -q .; then
     echo "Check: File containing ID '$id' exists in the directory"
-  elif [ "$id" == "TX-DSHS-####" ]; then
+  elif [ "$id" == "TX_DSHS_ID" ]; then
     echo "Check: File containing ID '$id' exists in the directory"
   else
     echo "Error: File containing ID '$id' does not exist in the directory"

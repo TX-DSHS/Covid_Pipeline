@@ -228,11 +228,11 @@ rm $result.failed*
 rm $result.exclude
 rm $result.fastqnames
 rm $result.demo.status.sra
-cp $SampleDemo $PWD/old_demos/demos_$1.txt
+#cp $SampleDemo $PWD/old_demos/demos_$1.txt
 
-if [ -e $basedir/cecret_runs/zipfiles/postCecret_$1.zip ];
+if [ -e $basedir/cecret_runs/zip_files/postCecret_$1.zip ];
 then
-rm $basedir/cecret_runs/zipfiles/postCecret_$1.zip
+rm $basedir/cecret_runs/zip_files/postCecret_$1.zip
 fi
-zip -rj $basedir/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
-aws s3 cp $basedir/cecret_runs/zipfiles/postCecret_$1.zip $aws_bucket/cecret_runs/zip_files/postCecret_$1.zip
+zip -rj $basedir/cecret_runs/zip_files/postCecret_$1 $run_dir/$1*
+aws s3 cp $basedir/cecret_runs/zip_files/postCecret_$1.zip $aws_bucket/cecret_runs/zip_files/postCecret_$1.zip

@@ -9,10 +9,8 @@
 # Usage: bash postCecretPipeline_CL_sb.sh <run_name> [-h]
 # Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820
 #
-# Author: Richard (Stephen) Bovio
-# Author Contact: richard.bovio@dshs.texas.gov
-# Date created: 2024-09-04
-# Date last updated: 2025-01-15
+# Author(s): jie.lu@dshs.texas.gov & richard.bovio@dshs.texas.gov
+# Date last updated: 2024-09-04
 #
 ######################################################################################################################################################
 
@@ -29,8 +27,8 @@ basedir="/bioinformatics/Covid_Pipeline/"
 # basedir=$PWD # UNCOMMENT ONCE PIPELINE IS COMPLETE AND LAMBDA IS TURNED BACK ON 
 run_dir="${basedir}cecret_runs/$1"
 # run_dir=$PWD/cecret_runs/$1 # UNCOMMENT ONCE PIPELINE IS COMPLETE AND LAMBDA IS TURNED BACK ON 
-# result=$run_dir'/cecret/cecret_results.txt'
-result="/bioinformatics/Covid_Pipeline/cecret_runs/cecret_results_TX-CL001-250115.txt"
+result=$run_dir'/cecret/cecret_run_results.txt'
+# result="/bioinformatics/Covid_Pipeline/cecret_runs/cecret_results_TX-CL001-241205.txt"
 demo=$run_dir/download/'demo_'$1.txt
 authors=$(head /bioinformatics/Covid_Pipeline/authors.txt)
 
