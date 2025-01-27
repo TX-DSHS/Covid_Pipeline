@@ -20,6 +20,8 @@ if [ $# -eq 0 -o "$1" == "-h" ] ; then
 	exit 0
 fi
 	
+basedir=$PWD
+aws_bucket="s3://804609861260-covid-19"
 run_dir=$PWD/cecret_runs/$1
 result=$run_dir/'run_results_'$1.txt
 SampleDemo='demo_'$1.txt
@@ -38,6 +40,9 @@ fi
 
 if [ -e $SampleDemo ]; then
    echo "The Demo File is: "$SampleDemo
+   # Convert windows format to unix format
+   dos2unix $SampleDemo
+
 else
    echo "Error: No Demo file Found. Please provide the demo file."
    exit 1
@@ -78,12 +83,12 @@ join -1 1 -2 1 -a1 -o 1.1,1.30,1.31,2.2,1.32,1.33,1.34,1.35,1.36,1.14,1.5,1.3,1.
 awk -F '\t' '{ $7 = ($7 == "0" ? "unknown" : $7)}1' OFS="\t" $result.demo.status |  awk -F '\t' '{ $9 = ($9 == "0" ? "" : $9) } 1 ' OFS="\t" \
 | awk -F '\t' '{$10 = sprintf("%.0f",$10)}1' OFS='\t' > $result.demo.status.final
 
-# Exclude Positive/Negative controls
-awk -F '\t' '$3 ~ /Positive/ || $3 ~ /PT/ ||  $3 ~ /Negative/ {print $1}' $result.demo.status.final | sort > $result.exclude
+# Exclude PT samples and Positive/Negative controls
+awk -F '\t' '$3 ~ /PT/ || $3 ~ /Positive/ || $3 ~ /Negative/ {print $1}' $result.demo.status.final | sort > $result.exclude
 
 
 ###############################################################
-# Combine complete samples to one fasta consensus file (minus Undetermined, Positive/Negative Controls, and PT samples) 
+# Combine complete samples to one fasta consensus file(minus Undetermined, Positive/Negative Controls, and PT samples) 
 if [ -e $result.filtered ];
 then
 rm $result.filtered
@@ -143,7 +148,7 @@ do
 done < $run_dir/$1_SRA_metadata.txt
 
 #################################################################
-# <run_name>_attribute.txt (Bioattibute table 49 fields)
+# Bioattibute table 49 fields
 # 1-*sample_name	sample_title	bioproject_accession	*organism	5-strain	*collected_by	*collection_date	*geo_loc_name	*host	10-*host_disease	*isolate	*isolation_source	antiviral_treatment_agent	collection_device	15-collection_method	date_of_prior_antiviral_treat	date_of_prior_sars_cov_2_infection	date_of_sars_cov_2_vaccination	exposure_event	20-geo_loc_exposure	gisaid_accession	gisaid_virus_name	host_age	host_anatomical_material	25-host_anatomical_part	host_body_product	host_disease_outcome	host_health_state	host_recent_travel_loc	30-host_recent_travel_return_date	host_sex	host_specimen_voucher	host_subject_id	lat_lon	passage_method	35-passage_number	prior_sars_cov_2_antiviral_treat	prior_sars_cov_2_infection	prior_sars_cov_2_vaccination	40-purpose_of_sampling	purpose_of_sequencing	sars_cov_2_diag_gene_name_1	sars_cov_2_diag_gene_name_2	sars_cov_2_diag_pcr_ct_value_1	45-sars_cov_2_diag_pcr_ct_value_2	sequenced_by	vaccine_received	virus_isolate_of_prior_infection	49-description
 awk -F '\t' -v OFS='\t' '{ sub("\r", "", $14); print $1,"","PRJNA639066","Severe acute respiratory syndrome coronavirus 2","SARS-CoV-2/USA/"$1"/"substr($6,0,4),\
 "Texas Department of State Health Services",$6,"USA: Texas","Homo sapiens","COVID-19","missing",$8,"","","","","","","","","",\
@@ -155,7 +160,7 @@ grep -f $result.failed -v - | grep -f $result.exclude -v - | cat template/attrib
 
 
 #################################################################
-# <run_name>_gisaid_sub.csv (30 fields)
+# GISAID csv 30 fields
 # 1-submitter,fn,covv_virus_name,covv_type,5-covv_passage,covv_collection_date,covv_location,covv_add_location,covv_host,10-covv_add_host_info,covv_sampling_strategy,covv_gender,covv_patient_age,covv_patient_status,15-covv_specimen,covv_outbreak,covv_last_vaccinated,covv_treatment,covv_seq_technology,20-covv_assembly_method,covv_coverage,covv_orig_lab,covv_orig_lab_addr,covv_provider_sample_id,25-covv_subm_lab,covv_subm_lab_addr,covv_subm_sample_id,covv_authors,covv_comment,30-comment_type
 
 awk -F '\t' -v OFS=',' -v runname="$1" -v authors="$authors" '{ sub("\r", "", $14); \
@@ -176,11 +181,11 @@ cat template/GISAID_submission_template.csv - \
  
 
 #################################################################
-# <run_name>.runlist.txt (8 fields)
+# runlist 8 fields
 #1-TEXAS-DSHS#	2-Sequencing_run	3-DSHS_id	4-Completed/Failed	5-Depth_After_Trimming	6-Utah_Lineage	7-num_N	8-Pangolin_status 9-C/FComments
 echo "TEXAS-DSHS#	Sequencing_run	DSHS_id	Completed/Failed	Depth_After_Trimming	Utah_Lineage	num_N	Pangolin_status	C/F_Comments" > $run_dir/$1.runlist.txt
 awk -F '\t' -v OFS='\t' '{ print $1,$2,$3,$4,$10"x",$11,$15,$16  }' $result.demo.status.final | grep -v 'Undetermined' |\
-awk -F '\t' -v OFS='\t' '{ if($8=="fail") $9="Failed QC"; else $9="";print $0 } ' |\
+awk -F '\t' -v OFS='\t' '{ if($8=="fail") $9="Failed Pangolin QC"; else $9="";print $0 } ' |\
 awk -F '\t' -v OFS='\t' '{ if($8=="pass" && $7>15000) $9="N>15000";print $0 } '|\
 awk -F '\t' -v OFS='\t' '{ if ($3 ~ /Positive/ || $3 ~ /Negative/) $4="Control";print $0}' |\
 awk -F '\t' -v OFS='\t' '{ if ($3 ~ /Positive/ || $3 ~ /Negative/) $9="";print $0}' \
@@ -188,7 +193,7 @@ awk -F '\t' -v OFS='\t' '{ if ($3 ~ /Positive/ || $3 ~ /Negative/) $9="";print $
 
 
 ################################################################
-# <run_name>.postCecret.log
+# Print Run Summary
 Total=`grep -f $result.exclude -v $result.demo.status.final | grep -v 'Undetermined' | wc -l`
 NComplete=`awk -F '\t' '$4=="Complete" {print $1}' $result.demo.status.final | grep -f $result.exclude -v | grep -v 'Undetermined' | wc -l`
 Nfail=`awk -F '\t' '$4=="Failed" {print $1}' $result.demo.status.final | grep -f $result.exclude -v | grep -v 'Undetermined' | wc -l`
@@ -223,11 +228,11 @@ rm $result.failed*
 rm $result.exclude
 rm $result.fastqnames
 rm $result.demo.status.sra
-cp $SampleDemo $PWD/old_demos/demos_$1.txt
+#cp $SampleDemo $PWD/old_demos/demos_$1.txt
 
-if [ -e /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip ];
+if [ -e $basedir/cecret_runs/zip_files/postCecret_$1.zip ];
 then
-rm /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip
+rm $basedir/cecret_runs/zip_files/postCecret_$1.zip
 fi
-zip -rj /home/dnalab/cecret_runs/zipfiles/postCecret_$1 $run_dir/$1*
-aws s3 cp /home/dnalab/cecret_runs/zipfiles/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip
+zip -rj $basedir/cecret_runs/zip_files/postCecret_$1 $run_dir/$1*
+aws s3 cp $basedir/cecret_runs/zip_files/postCecret_$1.zip $aws_bucket/cecret_runs/zip_files/postCecret_$1.zip

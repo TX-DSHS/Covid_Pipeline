@@ -48,11 +48,11 @@ fi
 while IFS=$'\t' read -r -a fields; do
     date_value="${fields[3]}"  # 4th field (0-based indexing)
 
-    if [ "$date_value" != "#N/A" ] && ! [[ "$date_value" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+    if [ "$date_value" != "#N/A" ] && ! [[ "$date_value" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] && ! [[ "$date_value" == "Complete/Failed" ]]; then
         echo "Error: Date format '$date_value' is not YYYY-MM-DD."
-        errocountered=1
-    elif [ "$date_value" = "Complete/Failed" ]]; then
-        continue 
+        error_encountered=1
+    elif [ "$date_value" == "Complete/Failed" ]; then
+        echo "Column header exists" 
     else 
 	echo "$date_value is in the correct format YYYY-MM-DD or #N/A (control)."
     fi
