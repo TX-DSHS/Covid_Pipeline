@@ -5,7 +5,7 @@ https://github.com/UPHL-BioNGS/Cecret
 ## The pipeline can be installed in /bioinformatics/ partition of AWS EC2 by:
 
 ```bash
-git clone https://github.com/TX-DSHS/Covid_pipeline.git -b bfx
+git clone https://github.com/TX-DSHS/Covid_pipeline.git
 
 # If seeing CRLF error
 git config core.autocrlf false
@@ -45,7 +45,7 @@ conda create -n nextflow -c conda-forge -c bioconda \
 ## To run Covid pipeline:
 ```bash
 # For Illumina runs
-bash run_Cecret.sh <run_name>
+bash run_Cecret_Miseq.sh <run_name>
 
 # For Clear Labs runs
 bash run_Cecret_CL.sh <run_name>
