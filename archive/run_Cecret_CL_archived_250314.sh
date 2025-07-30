@@ -9,19 +9,19 @@
 # Usage: bash run_Cecret_CL_sb.sh <run_name> 
 # Example: bash run_Cecret_CL_sb.sh TX-CL001-240820
 #
-# Author(s): richard.bovio@dshs.texas.gov, jie.lu@dshs.texas.gov
-# Date last updated: 2025-03-17
+# Author(s): jie.lu@dshs.texas.gov & richard.bovio@dshs.texas.gov
+# Date last updated: 2025-03-14
 #
 #################################################################################
 
 # Create variables for cecret analysis
+
+aws_bucket="s3://804609861260-covid-19"
 install_dir="/bioinformatics/Covid_Pipeline"
 basedir="${install_dir}/cecret_runs/$1"
-authors=$(head $install_dir'/template/authors.txt')
-#aws_bucket=$(head $basedir'/template/aws_bucket.txt')
-aws_bucket="s3://804609861260-covid-19"
 
 # Create directories for run analysis
+
 rm -rf $basedir 
 mkdir -p $basedir
 mkdir -p ${basedir}/download
@@ -33,7 +33,7 @@ echo "Running run_Cecret_CL.sh" 2>&1 | tee $basedir/run_Cecret.log
 echo `date` 2>&1 | tee -a $basedir/run_Cecret.log
 echo "" 2>&1 | tee -a $basedir/run_Cecret.log
 
-# Copy reads and demos from AWS S3 to ${basedir}/download
+# Copy read files from AWS S3 to ${basedir}/download
 aws s3 cp $aws_bucket/DATA/RAW_RUNS/$1.zip ${basedir}/download
 
 # If the zip file is not found, exit the script
@@ -51,31 +51,7 @@ unzip -j ${basedir}/download/$1.zip -d ${basedir}/download/ # Unzip read files
 tar -xvf ${basedir}/download/*.fastqs.tar -C ${basedir}/fastq # Extract fastq files from tar archive
 tar -xvf ${basedir}/download/*.fastas.tar -C ${basedir}/reads # Extract fasta files from tar archive
 
-
-
-#####################################################################################################
-#########################################                   #########################################
-#########################################  USE WHEN NEEDED  #########################################
-#########################################                   #########################################
-#####################################################################################################
-
-# REMOVE UNWANTED SAMPLES
-# rm ${basedir}/fastq/Water*
-# rm ${basedir}/reads/Water*
-
-# TMP MOVE MODIFIED DEMOS TO DOWNLOAD FOLDER
-# cp ${install_dir}/modified_demos/demo_TX-CL001-250519.txt ${basedir}/download/ 
-
-# RENAME DEMO FILE
-# mv ${basedir}/download/demo_TX_CL001-250603.txt ${basedir}/download/demo_TX-CL001-250603.txt
-
-#####################################################################################################
-
-# If filename has spaces then replace with underscore
-cd ${basedir}/reads
-for f in *\ *; do mv "$f" "${f// /_}"; done
-
-# Remove trailing line from demos function
+# Remove trailing line if one is present
 remove_trailing_blank_line() {
   local file="/bioinformatics/Covid_Pipeline/cecret_runs/$1/download/demo_$1.txt"
   # Check if file exists
@@ -86,19 +62,10 @@ remove_trailing_blank_line() {
 
   # Use sed to remove the trailing blank line
   sed -i ':a;/^[[:space:]]*$/{$d;N;ba}' "$file"
+
   echo "Trailing blank line removed from '$file'."
 }
-# Remove trailing line if one is present
 remove_trailing_blank_line "$1"
-
-# Create samplesheet
-cd ${basedir}/reads
-ls > samples.txt
-sed -i '/VERSION.txt/d' samples.txt
-sed -i '/samples.txt/d' samples.txt
-sed -i 's/.fasta//g' samples.txt
-cd ${install_dir}
-Rscript create_samplesheet.R $1 ${basedir}/reads/samples.txt
 
 
 # Activate conda environment
@@ -113,7 +80,7 @@ nextflow pull UPHL-BioNGS/Cecret
 # Run Cecret
 echo "Running Cecret Pipeline..." 2>&1 | tee -a $basedir/run_Cecret.log
 cd ${basedir}
-nextflow run UPHL-BioNGS/Cecret -profile docker --fastas ${basedir}/reads --sample_sheet $install_dir'/samplesheets/'$1_samplesheet.csv
+nextflow run UPHL-BioNGS/Cecret -profile docker --fastas ${basedir}/reads --sample_sheet "/bioinformatics/Covid_Pipeline/$1_samplesheet.csv"
 
 # If the run is not successful, exit the script
 if [ $? -ne 0 ]; then
@@ -124,17 +91,13 @@ else
   echo "" 2>&1 | tee -a $basedir/run_Cecret.log 
 fi
 
-
-
-
-
-
 # Zip Cecret results
 if [ -e ${install_dir}/cecret_runs/zip_files/$1.zip ]; then
   rm ${install_dir}/cecret_runs/zip_files/$1.zip
 fi
 echo "Zipping Cecret Pipeline output files" 2>&1 | tee -a $basedir/run_Cecret.log
 echo "" 2>&1 | tee -a $basedir/run_Cecret.log
+#zip -r ${install_dir}/cecret_runs/zip_files/$1.zip $basedir/cecret/
 cd ${basedir}/cecret/
 zip -r $1.zip .
 mv $1.zip ${install_dir}/cecret_runs/zip_files/
@@ -149,24 +112,58 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Copy cecret_results.csv to AWS S3 run_results
-echo "Transferring cecret_results.csv to AWS S3" 2>&1 | tee -a $basedir/run_Cecret.log
-echo "" 2>&1 | tee -a $basedir/run_Cecret.log
-aws s3 cp $basedir/cecret/cecret_results.csv $aws_bucket/cecret_runs/run_results/run_results_$1.csv
-# If the last executed command (i.e. AWS transfer) is not successful, exit the script
-if [ $? -ne 0 ]; then
-  echo "The cecret_results.csv file failed to transfer to the S3" 2>&1 | tee -a $basedir/run_Cecret.log
-  exit 1
-fi
-
-echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
-echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
-echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $basedir/run_Cecret.log
-
-
+## Copy cecret_results.csv to AWS S3 run_results
+#echo "Transferring cecret_results.csv to AWS S3" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo "" 2>&1 | tee -a $basedir/run_Cecret.log
+#aws s3 cp $basedir/cecret/cecret_results.csv $aws_bucket/cecret_runs/run_results/run_results_$1.csv
+## If the last executed command (i.e. AWS transfer) is not successful, exit the script
+#if [ $? -ne 0 ]; then
+#  echo "The cecret_results.csv file failed to transfer to the S3" 2>&1 | tee -a $basedir/run_Cecret.log
+#  exit 1
+#fi
+#
+#echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $basedir/run_Cecret.log
 
 
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
 
+
+## Check if demo file exists and is properly formatted
+#demo=$basedir/download/'demo_'$1.txt
+#if [ -e $demo ]; then
+#  dos2unix $demo > /dev/null 2>&1
+#  # Run the script and capture its exit status
+#  {
+#    bash ${install_dir}/check_demo.sh $1
+#  } 2>&1 | tee -a $basedir/run_Cecret.log
+#  # Capture the exit status of the script execution
+#  status=${PIPESTATUS[0]}
+#  # If the last executed command (i.e. checking demo file) is not successful, exit the script
+#  if [ $status -ne 0 ]; then
+#    echo "The demo file is not formatted properly" 2>&1 | tee -a $basedir/run_Cecret.log
+#    exit 1
+#  fi
+#else
+#  echo "ERROR: No demo file found" 2>&1 | tee -a $basedir/run_Cecret.log
+#  exit 1
+#fi
+#echo "" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $basedir/run_Cecret.log
+
+
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
 
 
 # Run postCecretPipeline
@@ -184,9 +181,9 @@ echo -e "-----------------------------------------------------------\n" 2>&1 | t
 ######################################################################################################################################################
 
 
-echo "Continuing run_Cecret_CL.sh "$version"..." 2>&1 | tee -a $basedir/run_Cecret.log
-echo `date` 2>&1 | tee -a $basedir/run_Cecret.log
-echo "" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo "Continuing run_Cecret_CL.sh "$version"..." 2>&1 | tee -a $basedir/run_Cecret.log
+#echo `date` 2>&1 | tee -a $basedir/run_Cecret.log
+#echo "" 2>&1 | tee -a $basedir/run_Cecret.log
 
 ## Submit to SRA
 #echo "Running submit_to_SRA.sh..." 2>&1 | tee -a $basedir/run_Cecret.log

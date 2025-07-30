@@ -27,7 +27,8 @@ fi
 
 basedir="/bioinformatics/Covid_Pipeline/cecret_runs"
 run_dir="${basedir}/$1"
-input_file="${run_dir}/download/demo_$1.txt"
+# input_file="${run_dir}/download/demo_$1.txt"
+input_file="/bioinformatics/Covid_Pipeline/demo_$1.txt"
 data_directory="${run_dir}/reads/"
 error_encountered=0
 
@@ -57,11 +58,11 @@ fi
 
 # Check if the file has exactly 9 fields or elements
 first_row_fields=$(head -n 1 "$input_file" | awk -F'\t' '{print NF}')
-if [ "$first_row_fields" -ne 9 ]; then
-    echo "Error: The input file does not have exactly 9 fields"
+if [ "$first_row_fields" -ne 10 ]; then
+    echo "Error: The input file does not have exactly 10 fields"
     error_encountered=1
 else
-    echo "Check: The input file has exactly 9 fields"
+    echo "Check: The input file has exactly 10 fields"
 fi
 
 # Check date format
@@ -81,17 +82,17 @@ done < "$input_file"
 echo ""
 
 # Check if each ID has a corresponding file in the specified data directory
-while IFS=$'\t' read -r id _; do
-  # Use find to check for the existence of a file containing the ID in the data directory
-  if find "$data_directory" -type f -name "*$id*" | grep -q .; then
-    echo "Check: File containing ID '$id' exists in the directory"
-  elif [ "$id" == "TX_DSHS_ID" ]; then
-    echo "Check: File containing ID '$id' exists in the directory"
-  else
-    echo "Error: File containing ID '$id' does not exist in the directory"
-    error_encountered=1
-  fi
-done < "$input_file"
+#while IFS=$'\t' read -r id _; do
+#  # Use find to check for the existence of a file containing the ID in the data directory
+#  if find "$data_directory" -type f -name "*$id*" | grep -q .; then
+#    echo "Check: File containing ID '$id' exists in the directory"
+#  elif [ "$id" == "TX_DSHS_ID" ]; then
+#    echo "Check: File containing ID '$id' exists in the directory"
+#  else
+#    echo "Error: File containing ID '$id' does not exist in the directory"
+#    error_encountered=1
+#  fi
+#done < "$input_file"
 
 echo ""
 

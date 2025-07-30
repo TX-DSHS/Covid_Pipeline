@@ -51,26 +51,6 @@ unzip -j ${basedir}/download/$1.zip -d ${basedir}/download/ # Unzip read files
 tar -xvf ${basedir}/download/*.fastqs.tar -C ${basedir}/fastq # Extract fastq files from tar archive
 tar -xvf ${basedir}/download/*.fastas.tar -C ${basedir}/reads # Extract fasta files from tar archive
 
-
-
-#####################################################################################################
-#########################################                   #########################################
-#########################################  USE WHEN NEEDED  #########################################
-#########################################                   #########################################
-#####################################################################################################
-
-# REMOVE UNWANTED SAMPLES
-# rm ${basedir}/fastq/Water*
-# rm ${basedir}/reads/Water*
-
-# TMP MOVE MODIFIED DEMOS TO DOWNLOAD FOLDER
-# cp ${install_dir}/modified_demos/demo_TX-CL001-250519.txt ${basedir}/download/ 
-
-# RENAME DEMO FILE
-# mv ${basedir}/download/demo_TX_CL001-250603.txt ${basedir}/download/demo_TX-CL001-250603.txt
-
-#####################################################################################################
-
 # If filename has spaces then replace with underscore
 cd ${basedir}/reads
 for f in *\ *; do mv "$f" "${f// /_}"; done
@@ -91,15 +71,71 @@ remove_trailing_blank_line() {
 # Remove trailing line if one is present
 remove_trailing_blank_line "$1"
 
-# Create samplesheet
-cd ${basedir}/reads
-ls > samples.txt
-sed -i '/VERSION.txt/d' samples.txt
-sed -i '/samples.txt/d' samples.txt
-sed -i 's/.fasta//g' samples.txt
-cd ${install_dir}
-Rscript create_samplesheet.R $1 ${basedir}/reads/samples.txt
+################################################################################################################
+############################ TEMPORARYILY RENAME FASTA/FASTQ FILES #############################################
+################################################################################################################
 
+## RENAME FASTA
+#
+## Define directory containing files
+#dir_path="/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250311/reads/"
+#mapping_file="/bioinformatics/Covid_Pipeline/mapping_file.txt"
+#
+## Read the mapping file into an associative array
+#declare -A rename_map
+#while read -r old new; do
+#    rename_map["$old"]="$new"
+#done < "$mapping_file"
+#
+## Iterate over files in the directory
+#for file in "$dir_path"/*.*; do
+#    filename=$(basename -- "$file")  # Extract filename
+#    prefix="${filename%%.*}"         # Extract prefix before the first period
+#    suffix="${filename#*.}"          # Extract everything after the first period
+#
+#    # Check if the prefix exists in the mapping
+#    if [[ -n "${rename_map[$prefix]}" ]]; then
+#        new_prefix="${rename_map[$prefix]}"
+#        new_filename="$dir_path/$new_prefix.$suffix"
+#
+#        # Rename the file
+#        mv "$file" "$new_filename"
+#        echo "Renamed: $filename -> $(basename "$new_filename")"
+#    fi
+#done
+#
+## RENAME FASTQ
+#
+## Define directory containing files
+#dir_path="/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250311/fastq/"
+#mapping_file="/bioinformatics/Covid_Pipeline/mapping_file.txt"
+#
+## Read the mapping file into an associative array
+#declare -A rename_map
+#while read -r old new; do
+#    rename_map["$old"]="$new"
+#done < "$mapping_file"
+#
+## Iterate over files in the directory
+#for file in "$dir_path"/*.*; do
+#    filename=$(basename -- "$file")  # Extract filename
+#    prefix="${filename%%.*}"         # Extract prefix before the first period
+#    suffix="${filename#*.}"          # Extract everything after the first period
+#
+#    # Check if the prefix exists in the mapping
+#    if [[ -n "${rename_map[$prefix]}" ]]; then
+#        new_prefix="${rename_map[$prefix]}"
+#        new_filename="$dir_path/$new_prefix.$suffix"
+#
+#        # Rename the file
+#        mv "$file" "$new_filename"
+#        echo "Renamed: $filename -> $(basename "$new_filename")"
+#    fi
+#done
+
+################################################################################################################
+################################################################################################################
+################################################################################################################
 
 # Activate conda environment
 echo "Activating conda environment" 2>&1 | tee -a $basedir/run_Cecret.log 
@@ -123,11 +159,6 @@ else
   echo "The Cecret pipeline completed successfully" 2>&1 | tee -a $basedir/run_Cecret.log
   echo "" 2>&1 | tee -a $basedir/run_Cecret.log 
 fi
-
-
-
-
-
 
 # Zip Cecret results
 if [ -e ${install_dir}/cecret_runs/zip_files/$1.zip ]; then
@@ -164,9 +195,43 @@ echo -e "-----------------------------------------------------------" 2>&1 | tee
 echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $basedir/run_Cecret.log
 
 
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
 
 
+## Check if demo file exists and is properly formatted
+#demo=$basedir/download/'demo_'$1.txt
+#if [ -e $demo ]; then
+#  dos2unix $demo > /dev/null 2>&1
+#  # Run the script and capture its exit status
+#  {
+#    bash ${install_dir}/check_demo.sh $1
+#  } 2>&1 | tee -a $basedir/run_Cecret.log
+#  # Capture the exit status of the script execution
+#  status=${PIPESTATUS[0]}
+#  # If the last executed command (i.e. checking demo file) is not successful, exit the script
+#  if [ $status -ne 0 ]; then
+#    echo "The demo file is not formatted properly" 2>&1 | tee -a $basedir/run_Cecret.log
+#    exit 1
+#  fi
+#else
+#  echo "ERROR: No demo file found" 2>&1 | tee -a $basedir/run_Cecret.log
+#  exit 1
+#fi
+#echo "" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo -e "-----------------------------------------------------------\n" 2>&1 | tee -a $basedir/run_Cecret.log
 
+
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
+######################################################################################################################################################
 
 
 # Run postCecretPipeline

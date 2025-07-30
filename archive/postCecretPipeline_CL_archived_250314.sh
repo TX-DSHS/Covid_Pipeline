@@ -2,34 +2,35 @@
 
 ######################################################################################################################################################
 #
-# Title: postCecretPipeline_Miseq.sh
+# Title: postCecretPipeline_CL_sb.sh
 #
 # Description: This script creates post analysis files for SRA and GISAID submission. 
 #
-# Usage: bash postCecretPipeline_Miseq.sh <run_name> [-h]
-# Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_Miseq.sh TX-CL001-240820
+# Usage: bash postCecretPipeline_CL_sb.sh <run_name> [-h]
+# Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820
 #
-# Author(s): jie.lu@dshs.texas.gov & richard.bovio@dshs.texas.gov
-# Date last updated: 2024-09-04
+# Author: Richard (Stephen) Bovio
+# Author Contact: richard.bovio@dshs.texas.gov
+# Date created: 2024-09-04
+# Date last updated: 2025-03-11
 #
 ######################################################################################################################################################
 
 # If no arguments are provided OR the <run_name> == '-h'
 if [ $# -eq 0 -o "$1" == "-h" ] ; then
   echo "No arguments provided"
-  echo "Usage: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_Miseq.sh <run_name>"
-  echo "Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_Miseq.sh TX-CL001-240820"
+  echo "Usage: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh <run_name>"
+  echo "Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820"
 	exit 0
 fi
 
 # Create variables for cecret analysis
 basedir="/bioinformatics/Covid_Pipeline/"
-# basedir=$PWD # UNCOMMENT ONCE PIPELINE IS COMPLETE AND LAMBDA IS TURNED BACK ON 
 run_dir="${basedir}cecret_runs/$1"
-# run_dir=$PWD/cecret_runs/$1 # UNCOMMENT ONCE PIPELINE IS COMPLETE AND LAMBDA IS TURNED BACK ON 
-result=$run_dir'/cecret/cecret_run_results.txt'
-# result="/bioinformatics/Covid_Pipeline/cecret_runs/cecret_results_TX-CL001-241205.txt"
+result=$run_dir'/cecret/cecret_results.txt'
+# result=${basedir}'cecret_results.csv'
 demo=$run_dir/download/'demo_'$1.txt
+# demo=${basedir}'demo_'$1.txt
 authors=$(head /bioinformatics/Covid_Pipeline/authors.txt)
 
 echo "Running postCecretPipeline_CL.sh "$version 2>&1 | tee $run_dir/$1.postCecret.log
@@ -54,14 +55,13 @@ else
 fi
 
 # Remove the suffix added by Clear Labs system from the Sample_ID
-# python3 /bioinformatics/Covid_Pipeline/convertFileName.py $result $result.tmp # Original code
 python3 /bioinformatics/Covid_Pipeline/convert_results.py $result $result.tmp
 
 # Generate short file (5 columns):
 # 1-sample_id  sample	pangolin_lineage  num_N	
 # 5-pangolin_qc_status
 
-awk -F '\t' '{print $1, $2, $3, $7, $25}' OFS="\t" $result.tmp > $result.short
+awk -F '\t' '{print $1, $2, $3, $7, $25}' OFS="\t" $result > $result.short
 
 # Generate failed file (1 column; contains only failed samples):
 # 1-sample_id
@@ -271,7 +271,7 @@ echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
 # Remove work directory and temporary files
 echo "Removing work directory and temporary files" 2>&1 | tee -a $run_dir/$1.postCecret.log
 echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
-# rm -r $run_dir/work
+rm -r $run_dir/work
 rm $result.tmp
 rm $result.status
 rm $result.short

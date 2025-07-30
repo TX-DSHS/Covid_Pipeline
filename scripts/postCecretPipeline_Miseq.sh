@@ -2,12 +2,12 @@
 
 ######################################################################################################################################################
 #
-# Title: postCecretPipeline_Miseq.sh
+# Title: postCecretPipeline_CL_sb.sh
 #
 # Description: This script creates post analysis files for SRA and GISAID submission. 
 #
-# Usage: bash postCecretPipeline_Miseq.sh <run_name> [-h]
-# Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_Miseq.sh TX-CL001-240820
+# Usage: bash postCecretPipeline_CL_sb.sh <run_name> [-h]
+# Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820
 #
 # Author(s): jie.lu@dshs.texas.gov & richard.bovio@dshs.texas.gov
 # Date last updated: 2024-09-04
@@ -17,8 +17,8 @@
 # If no arguments are provided OR the <run_name> == '-h'
 if [ $# -eq 0 -o "$1" == "-h" ] ; then
   echo "No arguments provided"
-  echo "Usage: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_Miseq.sh <run_name>"
-  echo "Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_Miseq.sh TX-CL001-240820"
+  echo "Usage: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh <run_name>"
+  echo "Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820"
 	exit 0
 fi
 

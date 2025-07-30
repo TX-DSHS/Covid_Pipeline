@@ -1,0 +1,17 @@
+sample,fastq_1,ont
+TX-DSHS-26773.BD8L11.2025-05-14.02.A01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/TX-DSHS-26773.BD8L11.2025-05-14.02.A01.fasta,ont
+TX-DSHS-26774.BD8L11.2025-05-14.02.B01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/TX-DSHS-26774.BD8L11.2025-05-14.02.B01.fasta,ont
+TX-DSHS-26775.BD8L11.2025-05-14.02.C01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/TX-DSHS-26775.BD8L11.2025-05-14.02.C01.fasta,ont
+TX-DSHS-26776.BD8L11.2025-05-14.02.D01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/TX-DSHS-26776.BD8L11.2025-05-14.02.D01.fasta,ont
+TX-DSHS-26777.BD8L11.2025-05-14.02.E01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/TX-DSHS-26777.BD8L11.2025-05-14.02.E01.fasta,ont
+TX-DSHS-26778.BD8L11.2025-05-14.02.F01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/TX-DSHS-26778.BD8L11.2025-05-14.02.F01.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.A02,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.A02.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.B02,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.B02.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.C02,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.C02.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.D02,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.D02.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.E02,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.E02.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.F02,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.F02.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.G01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.G01.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.G02,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.G02.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.H01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.H01.fasta,ont
+Water_Spacer.BD8L11.2025-05-14.02.H02,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250514/reads/Water_Spacer.BD8L11.2025-05-14.02.H02.fasta,ont

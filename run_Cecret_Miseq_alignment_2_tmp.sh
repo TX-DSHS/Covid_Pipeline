@@ -42,14 +42,14 @@ sequencer=$(echo $1 | cut -d "-" -f2)
 run_date=$(echo $1 |cut -d "-" -f3)
 
 #for new file path set vaiable $folder1 to directory name
-folder1=$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Alignment_1/ | cut -d " " -f29)
+folder1=$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Alignment_2/ | cut -d " " -f29)
 #copy fastq files to cecret run folder
-if [[ $(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Alignment_1/${folder1}Fastq/) ]]
+if [[ $(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Alignment_2/${folder1}Fastq/) ]]
   then 
-    seq_files=$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Alignment_1/${folder1}Fastq/ | awk '{print $4}')
+    seq_files=$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Alignment_2/${folder1}Fastq/ | awk '{print $4}')
     for i in $seq_files 
       do 
-      aws s3 cp s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Alignment_1/${folder1}Fastq/$i $basedir/reads/    #this is the file structure for sequencers updated to windows 10 using local run manager
+      aws s3 cp s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Alignment_2/${folder1}Fastq/$i $basedir/reads/    #this is the file structure for sequencers updated to windows 10 using local run manager
     done
     echo "sequencer uses new file structure"
 elif [[ $(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/$(aws s3 ls s3://804609861260-covid-19/covid_sequencing_runs/ |grep $sequencer |grep $run_date |cut -d " " -f29)Data/Intensities/BaseCalls/) ]]

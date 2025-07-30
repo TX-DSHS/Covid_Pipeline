@@ -117,7 +117,7 @@ echo "running postCecretPipeline" 1>>$basedir/run_Cecret.log
 if ls ${install_dir}/demo_$1.txt 1> /dev/null 2>&1; then
     echo "demo file found" 1>>$basedir/run_Cecret.log
     cd $install_dir
-    bash postCecretPipeline_Miseq.sh $1 2>>$basedir/run_Cecret.err
+    bash postCecretPipeline.sh $1 2>>$basedir/run_Cecret.err
   
 else
     echo "demo file does not exist" 1>>$basedir/run_Cecret.log
