@@ -43,12 +43,6 @@ echo "Running postCecretPipeline_CL.sh "$version 2>&1 | tee $run_dir/$1.postCecr
 echo `date` 2>&1 | tee -a $run_dir/$1.postCecret.log
 echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
 
-# Activate conda environment
-echo "Activating conda environment..." 2>&1 | tee -a $run_dir/$1.postCecret.log
-echo ""  2>&1 | tee -a $run_dir/$1.postCecret.log
-source /bioinformatics/Covid_Pipeline/miniconda3/etc/profile.d/conda.sh
-conda activate covid
-
 # Check if cecret_results.txt file was generated
 echo "Checking if cecret_results.txt was generated..." 2>&1 | tee -a $run_dir/$1.postCecret.log
 if [ -e $result ]; then

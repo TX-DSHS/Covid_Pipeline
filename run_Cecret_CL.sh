@@ -6,20 +6,30 @@
 # The script will download the sequencing run data from the S3 bucket, run the Cecret pipeline, and upload the results back to the S3 bucket.
 # The script will also run the postCecretPipeline.sh script if the demo file is found.
 #
-# Usage: bash run_Cecret_CL_sb.sh <run_name> 
-# Example: bash run_Cecret_CL_sb.sh TX-CL001-240820
+# Usage: bash run_Cecret_CL.sh <run_name> 
+# Example: bash run_Cecret_CL.sh TX-CL001-240820
 #
 # Author(s): richard.bovio@dshs.texas.gov, jie.lu@dshs.texas.gov
-# Date last updated: 2025-03-17
+# Date last updated: 2025-08-05
 #
 #################################################################################
+
+## Create conda environment - completed 2025-08-05
+# conda create --name covid
+# conda install -c conda-forge -c bioconda r-dplyr r-lubridate pandas nextflow
+
+# Activate conda environment
+echo "Activating conda environment" 2>&1 | tee $basedir/run_Cecret.log 
+echo "" 2>&1 | tee -a $basedir/run_Cecret.log 
+source /bioinformatics/miniconda3/etc/profile.d/conda.sh
+conda activate covid
 
 # Create variables for cecret analysis
 install_dir="/bioinformatics/Covid_Pipeline"
 basedir="${install_dir}/cecret_runs/$1"
 authors=$(head $install_dir'/template/authors.txt')
 #aws_bucket=$(head $basedir'/template/aws_bucket.txt')
-aws_bucket="s3://804609861260-covid-19"
+aws_bucket="s3://430118851772-covid-19"
 
 # Create directories for run analysis
 rm -rf $basedir 
@@ -29,7 +39,7 @@ mkdir -p ${basedir}/reads
 mkdir -p ${basedir}/fastq
 
 # Generate run_Cecret.log
-echo "Running run_Cecret_CL.sh" 2>&1 | tee $basedir/run_Cecret.log 
+echo "Running run_Cecret_CL.sh" 2>&1 | tee -a $basedir/run_Cecret.log 
 echo `date` 2>&1 | tee -a $basedir/run_Cecret.log
 echo "" 2>&1 | tee -a $basedir/run_Cecret.log
 
@@ -77,7 +87,7 @@ for f in *\ *; do mv "$f" "${f// /_}"; done
 
 # Remove trailing line from demos function
 remove_trailing_blank_line() {
-  local file="/bioinformatics/Covid_Pipeline/cecret_runs/$1/download/demo_$1.txt"
+  local file="${install_dir}/cecret_runs/$1/download/demo_$1.txt"
   # Check if file exists
   if [[ ! -f "$file" ]]; then
     echo "Error: File '$file' does not exist."
@@ -99,13 +109,6 @@ sed -i '/samples.txt/d' samples.txt
 sed -i 's/.fasta//g' samples.txt
 cd ${install_dir}
 Rscript create_samplesheet.R $1 ${basedir}/reads/samples.txt
-
-
-# Activate conda environment
-echo "Activating conda environment" 2>&1 | tee -a $basedir/run_Cecret.log 
-echo "" 2>&1 | tee -a $basedir/run_Cecret.log 
-source ${install_dir}/miniconda3/etc/profile.d/conda.sh
-conda activate covid
 
 # Pulling the latest version of Cecret
 nextflow pull UPHL-BioNGS/Cecret
@@ -129,35 +132,35 @@ fi
 
 
 
-# Zip Cecret results
-if [ -e ${install_dir}/cecret_runs/zip_files/$1.zip ]; then
-  rm ${install_dir}/cecret_runs/zip_files/$1.zip
-fi
-echo "Zipping Cecret Pipeline output files" 2>&1 | tee -a $basedir/run_Cecret.log
-echo "" 2>&1 | tee -a $basedir/run_Cecret.log
-cd ${basedir}/cecret/
-zip -r $1.zip .
-mv $1.zip ${install_dir}/cecret_runs/zip_files/
-cd ${basedir}
-
-# Copy Cecret results to AWS S3 zip_files
-echo "Transferring Cecret Pipeline output files to AWS S3" 2>&1 | tee -a $basedir/run_Cecret.log
-aws s3 cp ${install_dir}/cecret_runs/zip_files/$1.zip $aws_bucket/cecret_runs/zip_files/
-# If the last executed command (i.e. AWS transfer) is not successful, exit the script
-if [ $? -ne 0 ]; then
-  echo "The zip file $1.zip failed to transfer to AWS S3" 2>&1 | tee -a $basedir/run_Cecret.log
-  exit 1
-fi
-
-# Copy cecret_results.csv to AWS S3 run_results
-echo "Transferring cecret_results.csv to AWS S3" 2>&1 | tee -a $basedir/run_Cecret.log
-echo "" 2>&1 | tee -a $basedir/run_Cecret.log
-aws s3 cp $basedir/cecret/cecret_results.csv $aws_bucket/cecret_runs/run_results/run_results_$1.csv
-# If the last executed command (i.e. AWS transfer) is not successful, exit the script
-if [ $? -ne 0 ]; then
-  echo "The cecret_results.csv file failed to transfer to the S3" 2>&1 | tee -a $basedir/run_Cecret.log
-  exit 1
-fi
+## Zip Cecret results
+#if [ -e ${install_dir}/cecret_runs/zip_files/$1.zip ]; then
+#  rm ${install_dir}/cecret_runs/zip_files/$1.zip
+#fi
+#echo "Zipping Cecret Pipeline output files" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo "" 2>&1 | tee -a $basedir/run_Cecret.log
+#cd ${basedir}/cecret/
+#zip -r $1.zip .
+#mv $1.zip ${install_dir}/cecret_runs/zip_files/
+#cd ${basedir}
+#
+## Copy Cecret results to AWS S3 zip_files
+#echo "Transferring Cecret Pipeline output files to AWS S3" 2>&1 | tee -a $basedir/run_Cecret.log
+#aws s3 cp ${install_dir}/cecret_runs/zip_files/$1.zip $aws_bucket/cecret_runs/zip_files/
+## If the last executed command (i.e. AWS transfer) is not successful, exit the script
+#if [ $? -ne 0 ]; then
+#  echo "The zip file $1.zip failed to transfer to AWS S3" 2>&1 | tee -a $basedir/run_Cecret.log
+#  exit 1
+#fi
+#
+## Copy cecret_results.csv to AWS S3 run_results
+#echo "Transferring cecret_results.csv to AWS S3" 2>&1 | tee -a $basedir/run_Cecret.log
+#echo "" 2>&1 | tee -a $basedir/run_Cecret.log
+#aws s3 cp $basedir/cecret/cecret_results.csv $aws_bucket/cecret_runs/run_results/run_results_$1.csv
+## If the last executed command (i.e. AWS transfer) is not successful, exit the script
+#if [ $? -ne 0 ]; then
+#  echo "The cecret_results.csv file failed to transfer to the S3" 2>&1 | tee -a $basedir/run_Cecret.log
+#  exit 1
+#fi
 
 echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
 echo -e "-----------------------------------------------------------" 2>&1 | tee -a $basedir/run_Cecret.log
