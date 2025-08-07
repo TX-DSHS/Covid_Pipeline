@@ -6,21 +6,21 @@
 #
 # Description: This script creates post analysis files for SRA and GISAID submission. 
 #
-# Usage: bash postCecretPipeline_CL_sb.sh <run_name> [-h]
-# Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820
+# Usage: bash postCecretPipeline_CL.sh <run_name> [-h]
+# Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL.sh TX-CL001-240820
 #
 # Author: Richard (Stephen) Bovio
 # Author Contact: richard.bovio@dshs.texas.gov
 # Date created: 2024-09-04
-# Date last updated: 2025-03-19
+# Date last updated: 2025-08-05
 #
 ######################################################################################################################################################
 
 # If no arguments are provided OR the <run_name> == '-h'
 if [ $# -eq 0 -o "$1" == "-h" ] ; then
   echo "No arguments provided"
-  echo "Usage: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh <run_name>"
-  echo "Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_sb.sh TX-CL001-240820"
+  echo "Usage: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL.sh <run_name>"
+  echo "Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL.sh TX-CL001-240820"
 	exit 0
 fi
 
@@ -129,4 +129,4 @@ echo "Zipping postCecretPipeline output files" 2>&1 | tee -a $run_dir/$1.postCec
 zip -rj $basedir/cecret_runs/zip_files/postCecret_$1 $run_dir/$1*
 echo "" 2>&1 | tee -a $run_dir/$1.postCecret.log
 echo "Transferring postCecretPipeline output files to AWS S3" 2>&1 | tee -a $run_dir/$1.postCecret.log
-aws s3 cp $basedir/cecret_runs/zip_files/postCecret_$1.zip s3://804609861260-covid-19/cecret_runs/zip_files/postCecret_$1.zip
+aws s3 cp $basedir/cecret_runs/zip_files/postCecret_$1.zip s3://430118851772-covid-19/cecret_runs/zip_files/postCecret_$1.zip

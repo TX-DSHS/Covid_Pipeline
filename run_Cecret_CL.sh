@@ -205,4 +205,4 @@ echo "Deactivating conda environment" 2>&1 | tee -a $basedir/run_Cecret.log
 echo "" 2>&1 | tee -a $basedir/run_Cecret.log
 conda deactivate
 
-echo "run_Cecret_CL_sb.sh completed at "`date` 2>&1 | tee -a $basedir/run_Cecret.log
+echo "run_Cecret_CL.sh completed at "`date` 2>&1 | tee -a $basedir/run_Cecret.log
