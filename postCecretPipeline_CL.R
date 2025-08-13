@@ -18,7 +18,7 @@ args <- commandArgs(trailingOnly = TRUE)
 
 # Set variables
 run_name <- args[1]
-base_dir <- "/bioinformatics/Covid_Pipeline/"
+base_dir <- "/bioinformatics/Covid/"
 run_dir <- paste0(base_dir,"cecret_runs/",run_name,"/")
 authors_path <- paste0(base_dir,"template/authors.txt")
 authors <- readLines(authors_path)
@@ -31,6 +31,7 @@ correct_sex_string <- "Unknown"
 num_N_threshold_value <- 15000
 data <- read.table(paste0(run_dir,"cecret/cecret_results.txt.tmp"), header = TRUE, sep = "\t")
 demo <- read.csv(paste0(run_dir,"download/demo_",run_name,".txt"), sep = "\t", header = TRUE)
+# demo <- read.csv(paste0(base_dir,"modified_demos/demo_",run_name,".txt"), sep = "\t", header = TRUE)
 
 ################################################################################
 ########################## PROCESS RESULTS #####################################

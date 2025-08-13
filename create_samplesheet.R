@@ -9,7 +9,7 @@ samples <- read.delim(s, header = FALSE)
 
 samples <- samples$V1
 
-fastq_dir <- paste0("/bioinformatics/Covid_Pipeline/cecret_runs/",run_name,"/reads/")
+fastq_dir <- paste0("/bioinformatics/Covid/cecret_runs/",run_name,"/reads/")
 
 data = data.frame(sample = character(),
                   fastq_1 = character(),

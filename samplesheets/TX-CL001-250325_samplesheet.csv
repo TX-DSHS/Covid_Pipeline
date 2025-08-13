@@ -1,8 +1,8 @@
 sample,fastq_1,ont
-TX-DSHS-26753.BD8L11.2025-03-25.01.A01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26753.BD8L11.2025-03-25.01.A01.fasta,ont
-TX-DSHS-26754.BD8L11.2025-03-25.01.B01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26754.BD8L11.2025-03-25.01.B01.fasta,ont
-TX-DSHS-26755.BD8L11.2025-03-25.01.C01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26755.BD8L11.2025-03-25.01.C01.fasta,ont
-TX-DSHS-26756.BD8L11.2025-03-25.01.D01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26756.BD8L11.2025-03-25.01.D01.fasta,ont
-TX-DSHS-26757.BD8L11.2025-03-25.01.E01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26757.BD8L11.2025-03-25.01.E01.fasta,ont
-TX-DSHS-26758.BD8L11.2025-03-25.01.F01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26758.BD8L11.2025-03-25.01.F01.fasta,ont
-TX-DSHS-26759.BD8L11.2025-03-25.01.G01,/bioinformatics/Covid_Pipeline/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26759.BD8L11.2025-03-25.01.G01.fasta,ont
+TX-DSHS-26753.BD8L11.2025-03-25.01.A01,/bioinformatics/Covid/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26753.BD8L11.2025-03-25.01.A01.fasta,ont
+TX-DSHS-26754.BD8L11.2025-03-25.01.B01,/bioinformatics/Covid/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26754.BD8L11.2025-03-25.01.B01.fasta,ont
+TX-DSHS-26755.BD8L11.2025-03-25.01.C01,/bioinformatics/Covid/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26755.BD8L11.2025-03-25.01.C01.fasta,ont
+TX-DSHS-26756.BD8L11.2025-03-25.01.D01,/bioinformatics/Covid/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26756.BD8L11.2025-03-25.01.D01.fasta,ont
+TX-DSHS-26757.BD8L11.2025-03-25.01.E01,/bioinformatics/Covid/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26757.BD8L11.2025-03-25.01.E01.fasta,ont
+TX-DSHS-26758.BD8L11.2025-03-25.01.F01,/bioinformatics/Covid/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26758.BD8L11.2025-03-25.01.F01.fasta,ont
+TX-DSHS-26759.BD8L11.2025-03-25.01.G01,/bioinformatics/Covid/cecret_runs/TX-CL001-250325/reads/TX-DSHS-26759.BD8L11.2025-03-25.01.G01.fasta,ont

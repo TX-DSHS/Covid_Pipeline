@@ -25,7 +25,7 @@ source /bioinformatics/miniconda3/etc/profile.d/conda.sh
 conda activate covid
 
 # Create variables for cecret analysis
-install_dir="/bioinformatics/Covid_Pipeline"
+install_dir="/bioinformatics/Covid"
 basedir="${install_dir}/cecret_runs/$1"
 authors=$(head $install_dir'/template/authors.txt')
 #aws_bucket=$(head $basedir'/template/aws_bucket.txt')
@@ -88,6 +88,7 @@ for f in *\ *; do mv "$f" "${f// /_}"; done
 # Remove trailing line from demos function
 remove_trailing_blank_line() {
   local file="${install_dir}/cecret_runs/$1/download/demo_$1.txt"
+  # local file="${install_dir}/modified_demos/demo_$1.txt"
   # Check if file exists
   if [[ ! -f "$file" ]]; then
     echo "Error: File '$file' does not exist."
@@ -111,6 +112,7 @@ cd ${install_dir}
 Rscript create_samplesheet.R $1 ${basedir}/reads/samples.txt
 
 # Pulling the latest version of Cecret
+rm -rf ~/.nextflow/assets/UPHL-BioNGS/Cecret
 nextflow pull UPHL-BioNGS/Cecret
 
 # Run Cecret

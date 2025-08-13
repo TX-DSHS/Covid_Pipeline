@@ -19,13 +19,13 @@
 # If no arguments are provided OR the <run_name> == '-h'
 if [ $# -eq 0 -o "$1" == "-h" ] ; then
   echo "No arguments provided"
-  echo "Usage: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL.sh <run_name>"
-  echo "Example: bash /bioinformatics/Covid_Pipeline/postCecretPipeline_CL.sh TX-CL001-240820"
+  echo "Usage: bash /bioinformatics/Covid/postCecretPipeline_CL.sh <run_name>"
+  echo "Example: bash /bioinformatics/Covid/postCecretPipeline_CL.sh TX-CL001-240820"
 	exit 0
 fi
 
 # Create variables for cecret analysis
-basedir="/bioinformatics/Covid_Pipeline"
+basedir="/bioinformatics/Covid"
 run_dir=$basedir'/cecret_runs/'$1
 
 # Read results file
@@ -55,10 +55,10 @@ else
 fi
 
 # Remove the suffix added by Clear Labs system from the Sample_ID
-python3 /bioinformatics/Covid_Pipeline/convert_results.py $result $result.tmp
+python3 /bioinformatics/Covid/convert_results.py $result $result.tmp
 
 # Post-processing
-Rscript /bioinformatics/Covid_Pipeline/postCecretPipeline_CL_linux.R $1
+Rscript /bioinformatics/Covid/postCecretPipeline_CL.R $1
 
 ################################################################################################
 ################################ SRA FASTA SUBMISSION ##########################################
