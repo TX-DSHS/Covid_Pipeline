@@ -2,7 +2,7 @@
 
 ######################################################################################################################################################
 #
-# Title: postCecretPipeline_CL_sb.sh
+# Title: postCecretPipeline_CL.sh
 #
 # Description: This script creates post analysis files for SRA and GISAID submission. 
 #

@@ -28,7 +28,6 @@ conda activate covid
 install_dir="/bioinformatics/Covid"
 basedir="${install_dir}/cecret_runs/$1"
 authors=$(head $install_dir'/template/authors.txt')
-#aws_bucket=$(head $basedir'/template/aws_bucket.txt')
 aws_bucket="s3://430118851772-covid-19"
 
 # Create directories for run analysis
